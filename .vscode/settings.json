@@ -1,0 +1,28 @@
+{
+  "editor.fontSize": 14,
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "eslint.autoFixOnSave": true,
+  // "eslint.validate": [
+  //   "javascript",
+  //   "vue",
+  //   "html"
+  // ],
+  "prettier.arrowParens": "avoid",
+  "prettier.printWidth": 150,
+  "prettier.semi": false,
+  "prettier.singleQuote": true,
+  "prettier.jsxSingleQuote": true,
+  "vetur.format.defaultFormatterOptions": {
+    "prettier": {
+      "arrowParens": "avoid:",
+      "printWidth": 150,
+      "semi": false,
+      "singleQuote": true
+    },
+    "prettyhtml": {
+      "sortAttributes": true
+    }
+  }
+  // "vetur.format.defaultFormatter.js": "vscode-typescript",
+}
