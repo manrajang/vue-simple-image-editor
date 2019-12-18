@@ -1,8 +1,8 @@
 {
   "editor.fontSize": 14,
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "editor.tabSize": 2,
-  "eslint.autoFixOnSave": true,
+  // "eslint.autoFixOnSave": true,
   // "eslint.validate": [
   //   "javascript",
   //   "vue",
@@ -23,6 +23,9 @@
     "prettyhtml": {
       "sortAttributes": true
     }
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
   }
   // "vetur.format.defaultFormatter.js": "vscode-typescript",
 }

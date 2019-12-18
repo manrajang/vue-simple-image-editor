@@ -1,22 +1,28 @@
 <template>
-  <canvas
-    :height="height"
-    :width="width"
-    @mousedown="onMouseDown"
-    @mouseleave="onMouseLeave"
-    @mousemove="onMouseMove"
-    @mouseup="onMouseUp"
-    id="simpleCanvas"
-    ref="simpleCanvas"
-  ></canvas>
+  <div :style="{ width: width + 'px', height: height + 'px' }" class="container" ref="container">
+    <canvas
+      :height="height"
+      :width="width"
+      @mousedown="onMouseDown"
+      id="viewCanvas"
+      ref="viewCanvas"
+    ></canvas>
+    <canvas
+      :height="height"
+      :width="width"
+      @mousemove="onMouseMove"
+      @mouseup="onMouseUp"
+      id="editorCanvas"
+      ref="editorCanvas"
+      v-show="shape"
+    ></canvas>
+  </div>
 </template>
 
 <script>
-const DRAW_MODE = {
-  START: 0,
-  DRAWING: 1,
-  END: 2
-}
+import { mapState } from 'vuex'
+import RenderController from '@/controller/RenderController'
+import { DRAW_MODE_TYPE, CURSOR_MODE_TYPE } from '@/constants'
 
 export default {
   props: {
@@ -25,63 +31,90 @@ export default {
   },
   data () {
     return {
-      drawMode: null,
+      cursorMode: null,
+      viewCtx: null,
       ctx: null,
-      lastPos: { x: 0, y: 0 },
+      startPos: { x: 0, y: 0 },
+      prevPos: { x: 0, y: 0 },
       curPos: { x: 0, y: 0 },
+      shapeList: [],
+      viewController: null,
+      editorController: null,
+      shape: null,
+    }
+  },
+  computed: {
+    ...mapState({
+      DRAW_MODE: 'drawMode',
+      SHAPE_TYPE: 'shapeType',
+    })
+  },
+  watch: {
+    shapeList () {
+      this.drawShapeList()
     }
   },
   mounted () {
-    if (!this.ctx) {
-      this.ctx = this.$refs.simpleCanvas.getContext('2d')
-      this.ctx.lineWidth = 5
-      this.ctx.lineJoin = 'round'
-      this.ctx.lineCap = 'round'
-      this.ctx.strokeStyle = 'blue'
+    if (!this.viewController) {
+      this.viewController = new RenderController(this.$refs.viewCanvas)
+    }
+    if (!this.editorController) {
+      this.editorController = new RenderController(this.$refs.editorCanvas)
     }
   },
   methods: {
     onMouseDown (event) {
-      this.drawMode = DRAW_MODE.START
-      this.setPos(event)
-      this.startFree()
+      if (this.DRAW_MODE !== DRAW_MODE_TYPE.MOVE) {
+        this.curPos = this.getPos(event)
+        this.startPos = { ...this.curPos }
+        this.shape = {
+          type: this.SHAPE_TYPE,
+          bounds: { x: this.startPos.x, y: this.startPos.y, width: 0, height: 0 },
+          pathList: []
+        }
+      }
     },
     onMouseMove (event) {
-      if (this.drawMode === DRAW_MODE.START) {
-        this.lastPos.x = this.curPos.x
-        this.lastPos.y = this.curPos.y
-        this.setPos(event)
-        this.drawFree(this.lastPos.x, this.lastPos.y, this.curPos.x, this.curPos.y)
+      if (this.shape) {
+        this.editorController.clearRect()
+        this.prevPos = { ...this.curPos }
+        this.curPos = this.getPos(event)
+        const { bounds, pathList } = this.shape
+        bounds.width = this.curPos.x - bounds.x
+        bounds.height = this.curPos.y - bounds.y
+        pathList.push({ type: 'm', pos: { x: this.prevPos.x, y: this.prevPos.y } })
+        pathList.push({ type: 'l', pos: { x: this.curPos.x, y: this.curPos.y } })
+        this.editorController.draw(this.shape)
       }
     },
     onMouseUp (event) {
-      this.drawMode = DRAW_MODE.END
-      this.endFree()
+      if (this.shape) {
+        const endPos = this.getPos(event)
+        const { bounds } = this.shape
+        bounds.width = endPos.x - bounds.x
+        bounds.height = endPos.y - bounds.y
+        this.shapeList.push(this.shape)
+        this.shape = null
+      }
     },
-    onMouseLeave (event) {
-      this.drawMode = DRAW_MODE.END
-      this.endFree()
+    getPos ({ pageX, pageY }) {
+      const { offsetLeft, offsetTop } = this.$refs.container
+      return { x: pageX - offsetLeft, y: pageY - offsetTop }
     },
-    setPos (event) {
-      const { offsetLeft, offsetTop } = this.$refs.simpleCanvas
-      this.curPos.x = event.pageX - offsetLeft
-      this.curPos.y = event.pageY - offsetTop
-    },
-    startFree () {
-      this.ctx.beginPath()
-    },
-    drawFree (mX, mY, lX, lY) {
-      this.ctx.moveTo(mX, mY)
-      this.ctx.lineTo(lX, lY)
-      this.ctx.stroke()
-    },
-    endFree () {
-      this.ctx.closePath()
+    drawShapeList () {
+      this.shapeList.forEach(shape => this.viewController.draw(shape))
     }
   }
 }
 </script>
 
-<style>
-
+<style scope lang='scss'>
+  .container {
+    position: relative;
+    canvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+  }
 </style>

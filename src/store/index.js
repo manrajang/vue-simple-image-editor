@@ -5,13 +5,18 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    penMode: null,
+    drawMode: null,
+    shapeType: null
   },
   actions: {
+
   },
   mutations: {
-    setPenMode (state, penMode) {
-      state.penMode = penMode
+    setDrawMode (state, drawMode) {
+      state.drawMode = drawMode
     },
-  },
+    setShapeType (state, shapeType) {
+      state.shapeType = shapeType
+    }
+  }
 })
