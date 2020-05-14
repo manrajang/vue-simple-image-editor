@@ -1,7 +1,7 @@
 import { SHAPE_TYPE } from '@/constants'
 
 export default class RenderController {
-  constructor (canvas, width, height) {
+  constructor (canvas) {
     this.canvas = canvas
     this.ctx = canvas.getContext('2d')
     this.width = canvas.width
@@ -37,7 +37,6 @@ export default class RenderController {
     this.ctx.closePath()
   }
   clearRect () {
-    console.log('123')
     this.ctx.clearRect(0, 0, this.width, this.height)
   }
 }

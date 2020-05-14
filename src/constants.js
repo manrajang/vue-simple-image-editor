@@ -4,9 +4,8 @@ export const DRAW_MODE_TYPE = {
 }
 
 export const CURSOR_MODE_TYPE = {
-  START: 0,
-  DRAWING: 1,
-  END: 2
+  DRAWING: 0,
+  END: 1
 }
 
 export const SHAPE_TYPE = {

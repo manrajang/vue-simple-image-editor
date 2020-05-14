@@ -14,7 +14,7 @@
       @mouseup="onMouseUp"
       id="editorCanvas"
       ref="editorCanvas"
-      v-show="shape"
+      v-show="isDrwaing"
     ></canvas>
   </div>
 </template>
@@ -32,8 +32,6 @@ export default {
   data () {
     return {
       cursorMode: null,
-      viewCtx: null,
-      ctx: null,
       startPos: { x: 0, y: 0 },
       prevPos: { x: 0, y: 0 },
       curPos: { x: 0, y: 0 },
@@ -47,11 +45,9 @@ export default {
     ...mapState({
       DRAW_MODE: 'drawMode',
       SHAPE_TYPE: 'shapeType',
-    })
-  },
-  watch: {
-    shapeList () {
-      this.drawShapeList()
+    }),
+    isDrwaing () {
+      return this.cursorMode === CURSOR_MODE_TYPE.DRAWING
     }
   },
   mounted () {
@@ -65,43 +61,51 @@ export default {
   methods: {
     onMouseDown (event) {
       if (this.DRAW_MODE !== DRAW_MODE_TYPE.MOVE) {
+        this.cursorMode = CURSOR_MODE_TYPE.DRAWING
         this.curPos = this.getPos(event)
         this.startPos = { ...this.curPos }
+        const { x, y } = this.startPos
         this.shape = {
           type: this.SHAPE_TYPE,
-          bounds: { x: this.startPos.x, y: this.startPos.y, width: 0, height: 0 },
+          bounds: { x, y, width: 0, height: 0 },
           pathList: []
         }
       }
     },
     onMouseMove (event) {
-      if (this.shape) {
+      if (this.isDrwaing) {
+        const { pathList } = this.shape
         this.editorController.clearRect()
         this.prevPos = { ...this.curPos }
         this.curPos = this.getPos(event)
-        const { bounds, pathList } = this.shape
-        bounds.width = this.curPos.x - bounds.x
-        bounds.height = this.curPos.y - bounds.y
-        pathList.push({ type: 'm', pos: { x: this.prevPos.x, y: this.prevPos.y } })
-        pathList.push({ type: 'l', pos: { x: this.curPos.x, y: this.curPos.y } })
+        this.setBounds(this.curPos)
+        const { x: prevX, y: prevY } = this.prevPos
+        const { x: curX, y: curY } = this.curPos
+        pathList.push({ type: 'm', pos: { x: prevX, y: prevY } })
+        pathList.push({ type: 'l', pos: { x: curX, y: curY } })
         this.editorController.draw(this.shape)
       }
     },
     onMouseUp (event) {
-      if (this.shape) {
-        const endPos = this.getPos(event)
-        const { bounds } = this.shape
-        bounds.width = endPos.x - bounds.x
-        bounds.height = endPos.y - bounds.y
+      if (this.isDrwaing) {
+        this.cursorMode = CURSOR_MODE_TYPE.END
+        this.setBounds(this.getPos(event))
         this.shapeList.push(this.shape)
         this.shape = null
+        this.drawShapeList()
       }
     },
     getPos ({ pageX, pageY }) {
       const { offsetLeft, offsetTop } = this.$refs.container
       return { x: pageX - offsetLeft, y: pageY - offsetTop }
     },
+    setBounds ({ x, y }) {
+      const { bounds } = this.shape
+      bounds.width = x - bounds.x
+      bounds.height = y - bounds.y
+    },
     drawShapeList () {
+      this.viewController.clearRect()
       this.shapeList.forEach(shape => this.viewController.draw(shape))
     }
   }
