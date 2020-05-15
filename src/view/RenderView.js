@@ -1,22 +1,18 @@
-import { SHAPE_TYPE } from '@/constants'
-
-export default class RenderController {
+export default class RenderView {
   constructor (canvas) {
     this.canvas = canvas
     this.ctx = canvas.getContext('2d')
+    this.ctx.imageSmoothingEnabled = true
     this.width = canvas.width
     this.height = canvas.height
   }
-  draw ({ type, bounds, pathList }) {
-    switch (type) {
-      case SHAPE_TYPE.RECT:
-        this.drawRect(bounds)
-        break
-      case SHAPE_TYPE.FREE:
-        this.drawFree(pathList)
-        break
-      default:
-    }
+  draw (bounds) {
+    console.log(bounds)
+  }
+  drawImage (img, { x, y, width, height }) {
+    this.ctx.save()
+    this.ctx.drawImage(img, x, y, width, height)
+    this.ctx.restore()
   }
   drawRect ({ x, y, width, height }) {
     this.ctx.beginPath()
