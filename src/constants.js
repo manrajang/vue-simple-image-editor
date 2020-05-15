@@ -8,3 +8,10 @@ export const HANDLER_POS = {
   LEFT: 6,
   RIGHT: 7,
 }
+
+export const EDIT_MODE = {
+  NONE: 0,
+  RESIZE: 1,
+  MOVE: 2,
+  CROP: 3,
+}
