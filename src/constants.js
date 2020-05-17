@@ -1,12 +1,12 @@
 export const HANDLER_POS = {
-  TOP_LEFT: 0,
-  TOP_RIGHT: 1,
-  BOTTOM_LEFT: 2,
-  BOTTOM_RIGHT: 3,
-  TOP: 4,
-  BOTTOM: 5,
-  LEFT: 6,
-  RIGHT: 7,
+  LEFT: 1,
+  TOP: 2,
+  TOP_LEFT: 3,
+  BOTTOM: 4,
+  BOTTOM_LEFT: 5,
+  RIGHT: 8,
+  TOP_RIGHT: 10,
+  BOTTOM_RIGHT: 12,
 }
 
 export const EDIT_MODE = {

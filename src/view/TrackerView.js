@@ -12,19 +12,30 @@ function point (x, y) {
 }
 
 export default class TrackerView extends RenderView {
-  draw ({ x, y, width, height, rotate }) {
+  constructor (canvas, isCrop = false) {
+    super(canvas)
+    this.isCrop = isCrop
+  }
+  draw ({ left, top, right, bottom }) {
+    const width = right - left
+    const height = bottom - top
     this.ctx.save()
     this.ctx.strokeStyle = '#FF0000'
     this.ctx.lineWidth = 2
-    this.ctx.strokeRect(x, y, width, height)
-    this.drawHandler(x, y)
-    this.drawHandler(x + width, y)
-    this.drawHandler(x, y + height)
-    this.drawHandler(x + width, y + height)
-    this.drawHandler(x + width / 2, y)
-    this.drawHandler(x + width / 2, y + height)
-    this.drawHandler(x, y + height / 2)
-    this.drawHandler(x + width, y + height / 2)
+    this.ctx.strokeRect(left, top, width, height)
+    if (this.isCrop) {
+      this.ctx.globalAlpha = 0.1
+      this.ctx.fillStyle = '#C0C0C0'
+      this.ctx.fillRect(left, top, width, height)
+    }
+    this.drawHandler(left, top)
+    this.drawHandler(right, top)
+    this.drawHandler(left, bottom)
+    this.drawHandler(right, bottom)
+    this.drawHandler(left + width / 2, top)
+    this.drawHandler(left + width / 2, bottom)
+    this.drawHandler(left, top + height / 2)
+    this.drawHandler(right, top + height / 2)
     this.ctx.restore()
   }
   drawHandler (x, y) {
@@ -34,22 +45,24 @@ export default class TrackerView extends RenderView {
     this.ctx.fill()
     this.ctx.closePath()
   }
-  getHandler (mousePoint, { x, y, width, height, rotate }) {
-    if (dist(mousePoint, point(x, y)) <= HANDLER_SIZE) {
+  getHandler (mousePoint, { left, top, right, bottom }) {
+    const width = right - left
+    const height = bottom - top
+    if (dist(mousePoint, point(left, top)) <= HANDLER_SIZE) {
       return HANDLER_POS.TOP_LEFT
-    } else if (dist(mousePoint, point(x + width, y)) <= HANDLER_SIZE) {
+    } else if (dist(mousePoint, point(right, top)) <= HANDLER_SIZE) {
       return HANDLER_POS.TOP_RIGHT
-    } else if (dist(mousePoint, point(x, y + height)) <= HANDLER_SIZE) {
+    } else if (dist(mousePoint, point(left, bottom)) <= HANDLER_SIZE) {
       return HANDLER_POS.BOTTOM_LEFT
-    } else if (dist(mousePoint, point(x + width, y + height)) <= HANDLER_SIZE) {
+    } else if (dist(mousePoint, point(right, bottom)) <= HANDLER_SIZE) {
       return HANDLER_POS.BOTTOM_RIGHT
-    } else if (dist(mousePoint, point(x + width / 2, y)) <= HANDLER_SIZE) {
+    } else if (dist(mousePoint, point(left + width / 2, top)) <= HANDLER_SIZE) {
       return HANDLER_POS.TOP
-    } else if (dist(mousePoint, point(x + width / 2, y + height)) <= HANDLER_SIZE) {
+    } else if (dist(mousePoint, point(left + width / 2, bottom)) <= HANDLER_SIZE) {
       return HANDLER_POS.BOTTOM
-    } else if (dist(mousePoint, point(x, y + height / 2)) <= HANDLER_SIZE) {
+    } else if (dist(mousePoint, point(left, top + height / 2)) <= HANDLER_SIZE) {
       return HANDLER_POS.LEFT
-    } else if (dist(mousePoint, point(x + width, y + height / 2)) <= HANDLER_SIZE) {
+    } else if (dist(mousePoint, point(right, top + height / 2)) <= HANDLER_SIZE) {
       return HANDLER_POS.RIGHT
     }
     return null

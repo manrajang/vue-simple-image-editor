@@ -2,7 +2,8 @@
   <div>
     <button type="button" @click="onClickResize">리사이즈</button>
     <button type="button" @click="onClickCrop">크롭</button>
-    <button type="button" @click="onClickSave">저장</button>
+    <button type="button" @click="onClickSaveCrop">크롭 완료</button>
+    <button type="button" @click="onClickSaveImage">저장</button>
     <simple-canvas ref="simpleCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :isCrop="isCrop" :imageSrc="'img/a.png'" />
   </div>
 </template>
@@ -27,7 +28,11 @@ export default {
     onClickCrop () {
       this.isCrop = true
     },
-    onClickSave () {
+    onClickSaveCrop () {
+      this.$refs.simpleCanvas.crop()
+      this.isCrop = false
+    },
+    onClickSaveImage () {
       this.$refs.simpleCanvas.saveImageFile()
     }
   }

@@ -10,12 +10,15 @@
       ref="viewCanvas"
     ></canvas>
     <canvas
+      v-show="isCrop"
       class="resize-canvas"
       :height="height"
       :width="width"
-      id="editorCanvas"
-      ref="editorCanvas"
-      style="background:red;"
+      @mousedown="onMouseDown"
+      @mousemove="onMouseMove"
+      @mouseup="onMouseUp"
+      id="cropCanvas"
+      ref="cropCanvas"
     ></canvas>
   </div>
 </template>
@@ -24,6 +27,8 @@
 import ImageView from '@/view/ImageView'
 import TrackerView from '@/view/TrackerView'
 import { HANDLER_POS, EDIT_MODE } from '@/constants'
+
+const HANDLER_SIZE = 10
 
 function loadImage (src) {
   return new Promise((resolve, reject) => {
@@ -34,43 +39,45 @@ function loadImage (src) {
   })
 }
 
-function changeBoounds (bounds, mousePos, mode) {
-  const newBounds = { ...bounds }
-  switch (mode) {
-    case HANDLER_POS.TOP_LEFT:
-      newBounds.x = mousePos.x
-      newBounds.y = mousePos.y
-      newBounds.width = bounds.x - mousePos.x + bounds.width
-      newBounds.height = bounds.y - mousePos.y + bounds.height
-      break
-    case HANDLER_POS.TOP_RIGHT:
-      newBounds.y = mousePos.y
-      newBounds.width = mousePos.x - bounds.x
-      newBounds.height = bounds.y - mousePos.y + bounds.height
-      break
-    case HANDLER_POS.BOTTOM_LEFT:
-      newBounds.x = mousePos.x
-      newBounds.width = bounds.x - mousePos.x + bounds.width
-      newBounds.height = mousePos.y - bounds.y
-      break
-    case HANDLER_POS.BOTTOM_RIGHT:
-      newBounds.width = mousePos.x - bounds.x
-      newBounds.height = mousePos.y - bounds.y
-      break
-    case HANDLER_POS.TOP:
-      newBounds.y = mousePos.y
-      newBounds.height = bounds.y - mousePos.y + bounds.height
-      break
-    case HANDLER_POS.BOTTOM:
-      newBounds.height = mousePos.y - bounds.y
-      break
-    case HANDLER_POS.LEFT:
-      newBounds.x = mousePos.x
-      newBounds.width = bounds.x - mousePos.x + bounds.width
-      break
-    case HANDLER_POS.RIGHT:
-      newBounds.width = mousePos.x - bounds.x
-      break
+function changeBounds ({ left, top, right, bottom }, { left: boundaryLeft, top: boundaryTop, right: boundaryRight, bottom: boundaryBottom }, { x: mouseX, y: mouseY }, mode) {
+  const width = right - left
+  const height = bottom - top
+  const newBounds = { left, top, right, bottom }
+  if ((mode & HANDLER_POS.LEFT) === HANDLER_POS.LEFT) {
+    if (mouseX < boundaryLeft) {
+      newBounds.left = boundaryLeft
+    } else if (mouseX > right - HANDLER_SIZE) {
+      newBounds.left = right - HANDLER_SIZE
+    } else {
+      newBounds.left = mouseX
+    }
+  }
+  if ((mode & HANDLER_POS.TOP) === HANDLER_POS.TOP) {
+    if (mouseY < boundaryTop) {
+      newBounds.top = boundaryTop
+    } else if (mouseY > bottom - HANDLER_SIZE) {
+      newBounds.top = bottom - HANDLER_SIZE
+    } else {
+      newBounds.top = mouseY
+    }
+  }
+  if ((mode & HANDLER_POS.RIGHT) === HANDLER_POS.RIGHT) {
+    if (mouseX > boundaryRight) {
+      newBounds.right = boundaryRight
+    } else if (mouseX < left + HANDLER_SIZE) {
+      newBounds.right = left + HANDLER_SIZE
+    } else {
+      newBounds.right = mouseX
+    }
+  }
+  if ((mode & HANDLER_POS.BOTTOM) === HANDLER_POS.BOTTOM) {
+    if (mouseY > boundaryBottom) {
+      newBounds.bottom = boundaryBottom
+    } else if (mouseY < top + HANDLER_SIZE) {
+      newBounds.bottom = top + HANDLER_SIZE
+    } else {
+      newBounds.bottom = mouseY
+    }
   }
   return newBounds
 }
@@ -86,10 +93,12 @@ export default {
   data () {
     return {
       imageView: null,
-      trackerView: null,
+      resizeView: null,
+      cropView: null,
       image: null,
       bounds: null,
       cropBounds: null,
+      originBounds: null,
       editMode: EDIT_MODE.NONE,
       resizeMode: null,
       isDrawing: false,
@@ -99,8 +108,8 @@ export default {
   watch: {
     isCrop: {
       immediate: true,
-      handler (value) {
-        this.editMode = value ? EDIT_MODE.CROP : EDIT_MODE.NONE
+      handler () {
+        this.render()
       }
     },
     imageSrc: {
@@ -122,16 +131,16 @@ export default {
     image (value) {
       if (value) {
         const { width, height } = value
-        this.bounds = { x: (this.width - width) / 2, y: (this.height - height) / 2, width, height }
+        const x = (this.width - width) / 2
+        const y = (this.height - height) / 2
+        this.bounds = { left: x, top: y, right: x + width, bottom: y + height }
+        this.cropBounds = { ...this.bounds }
         this.imageView.image = value
-        this.drawResize()
+        this.render()
       } else {
         this.bounds = null
       }
     },
-    bounds (value) {
-      this.cropBounds = value ? { ...value } : null
-    }
   },
   created () {
     window.addEventListener('mouseup', this.onDocumentMouseUp)
@@ -140,8 +149,11 @@ export default {
     if (!this.imageView) {
       this.imageView = new ImageView(this.$refs.viewCanvas)
     }
-    if (!this.trackerView) {
-      this.trackerView = new TrackerView(this.$refs.viewCanvas)
+    if (!this.resizeView) {
+      this.resizeView = new TrackerView(this.$refs.viewCanvas)
+    }
+    if (!this.cropView) {
+      this.cropView = new TrackerView(this.$refs.cropCanvas, true)
     }
   },
   destroyed () {
@@ -152,92 +164,94 @@ export default {
       this.resizeMode = null
       this.editMode = EDIT_MODE.NONE
     },
-    drawResize () {
+    render () {
       if (this.bounds) {
         if (!this.isDrawing) {
           window.requestAnimationFrame(() => {
+            const renderBounds = this.getRenderBounds()
             this.imageView.draw(this.bounds)
-            this.trackerView.draw(this.bounds)
+            if (this.isCrop) {
+              this.cropView.clearRect()
+              this.cropView.draw(renderBounds)
+            } else {
+              this.resizeView.draw(renderBounds)
+            }
             this.isDrawing = false
           })
           this.isDrawing = true
         }
       }
     },
+    getTrackerView () {
+      return this.isCrop ? this.cropView : this.resizeView
+    },
+    getBoundaryBounds () {
+      return this.isCrop ? { ...this.bounds } : { left: 0, top: 0, right: this.width, bottom: this.height }
+    },
+    getRenderBounds () {
+      return this.isCrop ? this.cropBounds : this.bounds
+    },
+    setRenderBounds (bounds) {
+      if (this.isCrop) {
+        this.cropBounds = bounds
+      } else {
+        this.bounds = bounds
+        this.cropBounds = { ...bounds }
+      }
+    },
     onMouseDown (event) {
       const curPos = this.getPos(event)
-      this.resizeMode = this.trackerView.getHandler(curPos, this.bounds)
+      const bounds = this.getRenderBounds()
+      this.resizeMode = this.getTrackerView().getHandler(curPos, bounds)
       if (this.resizeMode == null) {
-        const { x, y, width, height } = this.bounds
+        const { left, top, right, bottom } = bounds
         const { x: posX, y: posY } = curPos
-        this.editMode = posX > x && posY > y && posX < x + width && posY < y + height ? EDIT_MODE.MOVE : EDIT_MODE.NONE
+        this.editMode = posX > left && posY > top && posX < right && posY < bottom ? EDIT_MODE.MOVE : EDIT_MODE.NONE
       } else {
         this.editMode = EDIT_MODE.RESIZE
       }
+      this.originBounds = { ...bounds }
       this.prevPos = curPos
-      // if (this.mode !== DRAW_MODE_TYPE.MOVE) {
-      //   this.cursorMode = CURSOR_MODE_TYPE.DRAWING
-      //   this.curPos = this.getPos(event)
-      //   this.startPos = { ...this.curPos }
-      //   const { x, y } = this.startPos
-      //   this.shape = {
-      //     type: this.SHAPE_TYPE,
-      //     bounds: { x, y, width: 0, height: 0 },
-      //     pathList: []
-      //   }
-      // }
+    },
+    resize (curPos) {
+      this.setRenderBounds(changeBounds(this.getRenderBounds(), this.getBoundaryBounds(), curPos, this.resizeMode))
+    },
+    move (curPos) {
+      const { left, top, right, bottom } = this.getRenderBounds()
+      const { x: curPosX, y: curPosY } = curPos
+      const { x: prevPosX, y: prevPosY } = this.prevPos
+      const width = right - left
+      const height = bottom - top
+      let newBoundsX = left + (curPosX - prevPosX)
+      let newBoundsY = top + (curPosY - prevPosY)
+      if (newBoundsX < 0) {
+        newBoundsX = 0
+      }
+      if (newBoundsY < 0) {
+        newBoundsY = 0
+      }
+      if (newBoundsX + width > this.width) {
+        newBoundsX = this.width - width
+      }
+      if (newBoundsY + height > this.height) {
+        newBoundsY = this.height - height
+      }
+      this.setRenderBounds({ left: newBoundsX, top: newBoundsY, right: newBoundsX + width, bottom: newBoundsY + height })
     },
     onMouseMove (event) {
       if (this.editMode !== EDIT_MODE.NONE) {
-        const { x, y, width, height } = this.bounds
         const curPos = this.getPos(event)
         if (this.editMode === EDIT_MODE.RESIZE) {
-          this.bounds = changeBoounds(this.bounds, curPos, this.handlerPos)
-          this.drawResize()
+          this.resize(curPos)
         } else if (this.editMode === EDIT_MODE.MOVE) {
-          const { x: curPosX, y: curPosY } = curPos
-          const { x: prevPosX, y: prevPosY } = this.prevPos
-          let newBoundsX = x + (curPosX - prevPosX)
-          let newBoundsY = y + (curPosY - prevPosY)
-          if (newBoundsX < 0) {
-            newBoundsX = 0
-          }
-          if (newBoundsY < 0) {
-            newBoundsY = 0
-          }
-          if (newBoundsX + width > this.width) {
-            newBoundsX = this.width - width
-          }
-          if (newBoundsY + height > this.height) {
-            newBoundsY = this.height - height
-          }
-          this.bounds = { x: newBoundsX, y: newBoundsY, width, height }
-          this.drawResize()
+          this.move(curPos)
         }
+        this.render()
         this.prevPos = curPos
       }
-      // if (this.isDrwaing) {
-      //   const { pathList } = this.shape
-      //   this.editorController.clearRect()
-      //   this.prevPos = { ...this.curPos }
-      //   this.curPos = this.getPos(event)
-      //   this.setBounds(this.curPos)
-      //   const { x: prevX, y: prevY } = this.prevPos
-      //   const { x: curX, y: curY } = this.curPos
-      //   pathList.push({ type: 'm', pos: { x: prevX, y: prevY } })
-      //   pathList.push({ type: 'l', pos: { x: curX, y: curY } })
-      //   this.editorController.draw(this.shape)
-      // }
     },
     onMouseUp (event) {
       this.initMode()
-      // if (this.isDrwaing) {
-      //   this.cursorMode = CURSOR_MODE_TYPE.END
-      //   this.setBounds(this.getPos(event))
-      //   this.shapeList.push(this.shape)
-      //   this.shape = null
-      //   this.drawShapeList()
-      // }
     },
     onDocumentMouseUp (event) {
       this.initMode()
@@ -250,7 +264,16 @@ export default {
       if (this.imageView) {
         this.imageView.saveFile(this.bounds)
       }
-    }
+    },
+    crop () {
+      if (this.imageView) {
+        const { left, top } = this.bounds
+        const { left: cropLeft, top: cropTop, right: cropRight, bottom: cropBottom } = this.cropBounds
+        this.imageView.crop({ x: cropLeft - left, y: cropTop - top, width: cropRight - cropLeft, height: cropBottom - cropTop })
+        this.bounds = { ...this.cropBounds }
+        this.render()
+      }
+    },
   }
 }
 </script>
