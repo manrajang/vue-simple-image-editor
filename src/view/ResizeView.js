@@ -10,8 +10,11 @@ function point (x, y) {
 }
 
 export default class ResizeView extends RenderView {
-  constructor (canvas, handlerSize) {
+  constructor (canvas, { strokeColor, strokeWidth, handlerFillColor, handlerSize }) {
     super(canvas)
+    this.strokeColor = strokeColor
+    this.strokeWidth = strokeWidth
+    this.handlerFillColor = handlerFillColor
     this.handlerSize = handlerSize
     this.boundaryBounds = null
     this.mode = null
@@ -21,12 +24,25 @@ export default class ResizeView extends RenderView {
       return
     }
     const { left, top, right, bottom } = this.bounds
+    this.ctx.save()
+    this.drawRect(left, top, right - left, bottom - top)
+    this.drawHandlerList()
+    this.ctx.restore()
+  }
+  drawRect (x, y, width, height) {
+    this.ctx.strokeStyle = this.strokeColor
+    this.ctx.lineWidth = this.strokeWidth
+    this.ctx.strokeRect(x, y, width, height)
+  }
+  drawHandler (x, y) {
+    const width = 2 * this.handlerSize
+    this.ctx.fillStyle = this.handlerFillColor
+    this.ctx.fillRect(x - this.handlerSize, y - this.handlerSize, width, width)
+  }
+  drawHandlerList () {
+    const { left, top, right, bottom } = this.bounds
     const width = right - left
     const height = bottom - top
-    this.ctx.save()
-    this.ctx.strokeStyle = '#FF0000'
-    this.ctx.lineWidth = 2
-    this.ctx.strokeRect(left, top, width, height)
     this.drawHandler(left, top)
     this.drawHandler(right, top)
     this.drawHandler(left, bottom)
@@ -35,14 +51,6 @@ export default class ResizeView extends RenderView {
     this.drawHandler(left + width / 2, bottom)
     this.drawHandler(left, top + height / 2)
     this.drawHandler(right, top + height / 2)
-    this.ctx.restore()
-  }
-  drawHandler (x, y) {
-    this.ctx.fillStyle = '#FF0000'
-    this.ctx.beginPath()
-    this.ctx.arc(x, y, this.handlerSize, 0, 2 * Math.PI)
-    this.ctx.fill()
-    this.ctx.closePath()
   }
   setMode (mousePoint) {
     const { x: posX, y: posY } = mousePoint

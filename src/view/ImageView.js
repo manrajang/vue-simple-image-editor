@@ -40,11 +40,11 @@ export default class ImageView extends RenderView {
   resize () {
     this.image.src = this.createResizeCanvas().toDataURL()
   }
-  saveFile () {
+  saveFile (fileName = 'imageFile') {
     this.createResizeCanvas().toBlob(function (blob) {
       const downloadLink = document.createElement('a')
       downloadLink.href = URL.createObjectURL(blob)
-      downloadLink.download = 'test.jpeg'
+      downloadLink.download = `${fileName}.jpeg`
       document.body.appendChild(downloadLink)
       downloadLink.click()
       document.body.removeChild(downloadLink)
