@@ -36,6 +36,13 @@ Vue.use(VueSimpleImageEditor)
 <simple-image-editor ref="cropCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" isCropMode :fixedCropWidth="500" :fixedCropHeight="500" @changeImage="onChangeImage"/>
 <br/>
 ```
+```js
+import VueSimpleImageEditor from 'vue-image-fade-scroll'
+
+components: {
+  VueSimpleImageEditor
+}
+```
 
 ### Props
 | Prop                          | Type               | Default                      | Description                              |
