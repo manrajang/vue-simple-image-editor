@@ -5,29 +5,43 @@ export default class ImageView extends RenderView {
     super(canvas)
     this.image = null
   }
-  draw ({ left, top, right, bottom }) {
-    if (this.image) {
-      this.clearRect()
-      this.ctx.save()
-      this.ctx.drawImage(this.image, left, top, right - left, bottom - top)
-      this.ctx.restore()
+  draw () {
+    if (!this.bounds || !this.image) {
+      return
     }
+    const { left, top, right, bottom } = this.bounds
+    this.clearRect()
+    this.ctx.save()
+    this.ctx.drawImage(this.image, left, top, right - left, bottom - top)
+    this.ctx.restore()
   }
-  crop ({ x, y, width, height }) {
+  crop (cropBounds) {
+    const { left, top } = this.bounds
+    const { left: cropLeft, top: cropTop, right: cropRight, bottom: cropBottom } = cropBounds
+    const width = cropRight - cropLeft
+    const height = cropBottom - cropTop
     const canvas = document.createElement('canvas')
     canvas.width = width
     canvas.height = height
-    canvas.getContext('2d').drawImage(this.image, x, y, width, height, 0, 0, width, height)
+    canvas.getContext('2d').drawImage(this.image, cropLeft - left, cropTop - top, width, height, 0, 0, width, height)
     this.image.src = canvas.toDataURL()
+    this.bounds = { left: cropLeft, top: cropTop, right: cropRight, bottom: cropBottom }
   }
-  saveFile ({ left, top, right, bottom }) {
+  createResizeCanvas () {
+    const { left, top, right, bottom } = this.bounds
     const width = right - left
     const height = bottom - top
     const canvas = document.createElement('canvas')
     canvas.width = width
     canvas.height = height
     canvas.getContext('2d').drawImage(this.image, 0, 0, width, height)
-    canvas.toBlob(function (blob) {
+    return canvas
+  }
+  resize () {
+    this.image.src = this.createResizeCanvas().toDataURL()
+  }
+  saveFile () {
+    this.createResizeCanvas().toBlob(function (blob) {
       const downloadLink = document.createElement('a')
       downloadLink.href = URL.createObjectURL(blob)
       downloadLink.download = 'test.jpeg'

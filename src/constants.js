@@ -7,6 +7,7 @@ export const HANDLER_POS = {
   RIGHT: 8,
   TOP_RIGHT: 10,
   BOTTOM_RIGHT: 12,
+  MOVE: 99,
 }
 
 export const EDIT_MODE = {

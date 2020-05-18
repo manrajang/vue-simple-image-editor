@@ -5,10 +5,10 @@ export default class RenderView {
     this.ctx.imageSmoothingEnabled = true
     this.width = canvas.width
     this.height = canvas.height
+    this.bounds = null
   }
-  draw (bounds) {
-    console.log(bounds)
-  }
+  // abstract
+  draw () {}
   clearRect () {
     this.ctx.clearRect(0, 0, this.width, this.height)
   }
