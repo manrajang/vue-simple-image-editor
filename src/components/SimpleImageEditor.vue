@@ -1,5 +1,5 @@
 <template>
-  <div :style="{ width: `${width}px`, height: `${height}px` }" class="container" ref="container">
+  <div :style="{ width: `${width}px`, height: `${height}px` }" class="container" ref="container" style="position:relative;">
     <canvas
       :height="height"
       :width="width"
@@ -19,10 +19,11 @@
       @mouseup="onMouseUp"
       id="cropCanvas"
       ref="cropCanvas"
+      style="position:absolute;left:0;top:0;"
     ></canvas>
     <template v-if="isMultiMode">
-      <button v-if="isCrop" class="crop-button" type="button" :style="cropSaveButtonStyle" @click="onClickCrop">{{ cropSaveButtonText }}</button>
-      <button v-else class="crop-button" type="button" :style="cropButtonStyle" @click="isCrop = true">{{ cropButtonText }}</button>
+      <button v-if="isCrop" style="position:absolute;right:0;top:0;" type="button" :style="cropSaveButtonStyle" @click="onClickCrop">{{ cropSaveButtonText }}</button>
+      <button v-else style="position:absolute;right:0;top:0;" type="button" :style="cropButtonStyle" @click="isCrop = true">{{ cropButtonText }}</button>
     </template>
   </div>
 </template>
@@ -255,19 +256,3 @@ export default {
   }
 }
 </script>
-
-<style scope lang='scss'>
-  .container {
-    position: relative;
-    .crop-canvas {
-      position: absolute;
-      left: 0;
-      top: 0;
-    }
-    .crop-button {
-      position: absolute;
-      right: 0;
-      top: 0;
-    }
-  }
-</style>

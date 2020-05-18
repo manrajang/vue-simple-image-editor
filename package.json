@@ -1,13 +1,13 @@
 {
   "name": "vue-simple-image-editor",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": false,
   "main": "dist/simpleImageEditor.common.js",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "bundle": "vue-cli-service build --target lib --name simpleImageEditor ./src/components/index.js"
+    "bundle": "vue-cli-service build --target lib --name simpleImageEditor ./src/components/SimpleImageEditor.vue"
   },
   "dependencies": {
     "core-js": "^3.4.3",
@@ -38,12 +38,13 @@
     "vue",
     "vue-img-simple-editor",
     "vue-image-simple-editor",
+    "simple-editor",
     "img-simple-editor",
     "image-simple-editor",
+    "simple editor",
     "img simple editor",
     "image simple editor",
-    "simple editor",
-    "corp",
+    "crop",
     "resize",
     "image crop",
     "image resize"

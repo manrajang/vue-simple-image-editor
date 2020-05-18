@@ -60,7 +60,6 @@ export default {
           const image = new Image()
           image.onload = e => {
             this.imageObj = image
-            var cell = document.getElementById('cell')
             while (this.$refs.container.hasChildNodes()) {
               this.$refs.container.removeChild(this.$refs.container.firstChild)
             }
