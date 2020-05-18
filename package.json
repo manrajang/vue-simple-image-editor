@@ -1,11 +1,13 @@
 {
-  "name": "vue-draw",
+  "name": "vue-simple-image-editor",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "main": "dist/simpleImageEditor.common.js",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "bundle": "vue-cli-service build --target lib --name simpleImageEditor ./src/components/index.js"
   },
   "dependencies": {
     "core-js": "^3.4.3",
@@ -24,5 +26,35 @@
     "sass": "^1.23.7",
     "sass-loader": "^8.0.0",
     "vue-template-compiler": "^2.6.10"
-  }
+  },
+  "license": "MIT",
+  "files": [
+    "dist/simpleImageEditor.umd.js",
+    "dist/simpleImageEditor.common.js",
+    "README.md"
+  ],
+  "author": "manrajang <manrajang@gmail.com>",
+  "keywords": [
+    "vue",
+    "vue-img-simple-editor",
+    "vue-image-simple-editor",
+    "img-simple-editor",
+    "image-simple-editor",
+    "img simple editor",
+    "image simple editor",
+    "simple editor",
+    "corp",
+    "resize",
+    "image crop",
+    "image resize"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manrajang/vue-simple-image-editor.git"
+  },
+  "description": "### DEMO https://manrajang.github.io/vue-simple-image-editor/",
+  "bugs": {
+    "url": "https://github.com/manrajang/vue-simple-image-editor/issues"
+  },
+  "homepage": "https://github.com/manrajang/vue-simple-image-editor#readme"
 }

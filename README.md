@@ -1,24 +1,74 @@
-# vue-draw
+# vue-image-simple-editor
 
-## Project setup
-```
-npm install
-```
+### DEMO
+https://manrajang.github.io/vue-simple-image-editor/
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+### Install
+```js
+import Vue from 'vue'
+import VueSimpleImageEditor from 'vue-simple-image-editor'
 
-### Compiles and minifies for production
-```
-npm run build
+Vue.use(VueSimpleImageEditor)
 ```
 
-### Lints and fixes files
-```
-npm run lint
+### Example
+```html
+<div>Resize &amp; Crop Mode</div>
+<button type="button" @click="onClickSaveImageFileInMutliMode">Save Image File (Multi)</button>
+<simple-image-editor ref="multiCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" @changeImage="onChangeImage"/>
+
+<div>Resize &amp; Crop Mode (Fix)</div>
+<button type="button" @click="onClickSaveImageFileInMutliModeWithFixedCrop">Save Image File (Multi)</button>
+<simple-image-editor ref="multiCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" :fixedCropWidth="500" :fixedCropHeight="500" @changeImage="onChangeImage"/>
+
+<div>Resize Mode</div>
+<button type="button" @click="onClickSaveImageFileInResizeMode">Save Image File (Resize)</button>
+<simple-image-editor ref="resizeCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" isResizeMode @changeImage="onChangeImage"/>
+
+<div>Crop Mode</div>
+<button type="button" @click="onClickSaveImageFileInCropMode">Save Image File (Crop)</button>
+<button type="button" @click="onClickSaveCrop">Save Crop</button>
+<simple-image-editor ref="cropCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" isCropMode @changeImage="onChangeImage"/>
+
+<div>Crop Mode (Fix)</div>
+<button type="button" @click="onClickSaveImageFileInCropModeWithFixedCrop">Save Image File (Crop)</button>
+<button type="button" @click="onClickSaveCropWithFixedCrop">Save Crop</button>
+<simple-image-editor ref="cropCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" isCropMode :fixedCropWidth="500" :fixedCropHeight="500" @changeImage="onChangeImage"/>
+<br/>
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+### Props
+| Prop                          | Type               | Default                      | Description                              |
+|-------------------------------|--------------------|------------------------------|------------------------------------------|
+| width                         | Number             | 500                          | Image Width                              |
+| height                        | Number             | 500                          | Image Height                             |
+| imageSrc                      | String             | null                         | Image Path                               |
+| imageObj                      | Image              | null                         | Image Object                             |
+| isResizeMode                  | Boolean            | false                        | Only Resize Mode                         |
+| isCropMode                    | Boolean            | false                        | Only Crop Mode                           |
+| resizeHandlerStyle            | Object             | DEFAULT_RESIZE_HANDLER_STYLE | Reisze Handler Style                     |
+| cropHandlerStyle              | Object             | DEFAULT_CROP_HANDLER_STYLE   | Crop Handler Style                       |
+| cropButtonText                | String             | 'Crop'                       | Crop Button Text                         |
+| cropButtonStyle               | Object             | null                         | Crop Button Style                        |
+| cropSaveButtonText            | String             | 'Save Crop'                  | Crop Save Button Text                    |
+| cropSaveButtonStyle           | Object             | null                         | Crop Save Button Style                   |
+| fixedCropWidth                | Number             | 0                            | Fixed Crop Width                         |
+| fixedCropHeight               | Number             | 0                            | Fixed Crop Height                        |
+
+### DEFAULT_RESIZE_HANDLER_STYLE
+| Prop                          | Type               | Default     | Description                              |
+|-------------------------------|--------------------|-------------|------------------------------------------|
+| strokeColor                   | String             | #FF0000     | Resize Stroke Color                      |
+| strokeWidth                   | Number             | 2           | Resize Stroke Width                      |
+| handlerFillColor              | String             | #FF0000     | Resize Handler Fill Color                |
+| handlerSize                   | Number             | 7           | Resize Handler Size                      |
+
+### DEFAULT_CROP_HANDLER_STYLE
+| Prop                          | Type               | Default     | Description                              |
+|-------------------------------|--------------------|-------------|------------------------------------------|
+| strokeColor                   | String             | #FF0000     | Resize Stroke Color                      |
+| strokeWidth                   | Number             | 2           | Resize Stroke Width                      |
+| handlerFillColor              | String             | #FF0000     | Resize Handler Fill Color                |
+| handlerSize                   | Number             | 7           | Resize Handler Size                      |
+| fillColor                     | String             | #C0C0C0     | Crop Fill Color                          |
+| fillAlpha                     | Number             | 0.3         | Crop Fill Alpha                          |
