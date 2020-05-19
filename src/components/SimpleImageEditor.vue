@@ -6,6 +6,9 @@
       @mousedown.stop="onMouseDown"
       @mousemove.stop="onMouseMove"
       @mouseup.stop="onMouseUp"
+      @touchstart.prevent="onMouseDown"
+      @touchmove.prevent="onMouseMove"
+      @touchend.prevent="onMouseUp"
       id="viewCanvas"
       ref="viewCanvas"
     ></canvas>
@@ -17,6 +20,9 @@
       @mousedown.stop="onMouseDown"
       @mousemove.stop="onMouseMove"
       @mouseup.stop="onMouseUp"
+      @touchstart.prevent="onMouseDown"
+      @touchmove.prevent="onMouseMove"
+      @touchend.prevent="onMouseUp"
       id="cropCanvas"
       ref="cropCanvas"
       style="position:absolute;left:0;top:0;"
@@ -170,7 +176,8 @@ export default {
     setImage (path) {
       loadImage(path).then(image => this.image = image)
     },
-    getPos ({ pageX, pageY }) {
+    getPos (event) {
+      const { pageX, pageY } = event.touches && event.touches.length > 0 ? event.touches[0] : event
       const { offsetLeft, offsetTop } = this.$refs.container
       return { x: pageX - offsetLeft, y: pageY - offsetTop }
     },
