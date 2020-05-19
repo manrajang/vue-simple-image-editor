@@ -53,7 +53,7 @@ export default class ResizeView extends RenderView {
     this.drawHandler(right, top + height / 2)
   }
   setMode (mousePoint) {
-    const { x: posX, y: posY } = mousePoint
+    const { x, y } = mousePoint
     const { left, top, right, bottom } = this.bounds
     const width = right - left
     const height = bottom - top
@@ -73,50 +73,50 @@ export default class ResizeView extends RenderView {
       this.mode = HANDLER_POS.LEFT
     } else if (dist(mousePoint, point(right, top + height / 2)) <= this.handlerSize) {
       this.mode = HANDLER_POS.RIGHT
-    } else if (posX > left && posY > top && posX < right && posY < bottom) {
+    } else if (x > left && y > top && x < right && y < bottom) {
       this.mode = HANDLER_POS.MOVE
     } else {
       this.mode = null
     }
   }
-  changeResizeBounds ({ x: mouseX, y: mouseY }) {
+  changeResizeBounds ({ x, y }) {
     const { left, top, right, bottom } = this.bounds
     const { left: boundaryLeft, top: boundaryTop, right: boundaryRight, bottom: boundaryBottom } = this.boundaryBounds
     const newBounds = { left, top, right, bottom }
     if ((this.mode & HANDLER_POS.LEFT) === HANDLER_POS.LEFT) {
-      if (mouseX < boundaryLeft) {
+      if (x < boundaryLeft) {
         newBounds.left = boundaryLeft
-      } else if (mouseX > right - this.handlerSize) {
+      } else if (x > right - this.handlerSize) {
         newBounds.left = right - this.handlerSize
       } else {
-        newBounds.left = mouseX
+        newBounds.left = x
       }
     }
     if ((this.mode & HANDLER_POS.TOP) === HANDLER_POS.TOP) {
-      if (mouseY < boundaryTop) {
+      if (y < boundaryTop) {
         newBounds.top = boundaryTop
-      } else if (mouseY > bottom - this.handlerSize) {
+      } else if (y > bottom - this.handlerSize) {
         newBounds.top = bottom - this.handlerSize
       } else {
-        newBounds.top = mouseY
+        newBounds.top = y
       }
     }
     if ((this.mode & HANDLER_POS.RIGHT) === HANDLER_POS.RIGHT) {
-      if (mouseX > boundaryRight) {
+      if (x > boundaryRight) {
         newBounds.right = boundaryRight
-      } else if (mouseX < left + this.handlerSize) {
+      } else if (x < left + this.handlerSize) {
         newBounds.right = left + this.handlerSize
       } else {
-        newBounds.right = mouseX
+        newBounds.right = x
       }
     }
     if ((this.mode & HANDLER_POS.BOTTOM) === HANDLER_POS.BOTTOM) {
-      if (mouseY > boundaryBottom) {
+      if (y > boundaryBottom) {
         newBounds.bottom = boundaryBottom
-      } else if (mouseY < top + this.handlerSize) {
+      } else if (y < top + this.handlerSize) {
         newBounds.bottom = top + this.handlerSize
       } else {
-        newBounds.bottom = mouseY
+        newBounds.bottom = y
       }
     }
     this.bounds = newBounds

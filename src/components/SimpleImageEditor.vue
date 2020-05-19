@@ -1,11 +1,11 @@
 <template>
-  <div :style="{ width: `${width}px`, height: `${height}px` }" class="container" ref="container" style="position:relative;">
+  <div :style="{ width: `${width}px`, height: `${height}px` }" class="container" ref="container" style="position:relative;transform:">
     <canvas
       :height="height"
       :width="width"
-      @mousedown="onMouseDown"
-      @mousemove="onMouseMove"
-      @mouseup="onMouseUp"
+      @mousedown.stop="onMouseDown"
+      @mousemove.stop="onMouseMove"
+      @mouseup.stop="onMouseUp"
       id="viewCanvas"
       ref="viewCanvas"
     ></canvas>
@@ -14,9 +14,9 @@
       class="crop-canvas"
       :height="height"
       :width="width"
-      @mousedown="onMouseDown"
-      @mousemove="onMouseMove"
-      @mouseup="onMouseUp"
+      @mousedown.stop="onMouseDown"
+      @mousemove.stop="onMouseMove"
+      @mouseup.stop="onMouseUp"
       id="cropCanvas"
       ref="cropCanvas"
       style="position:absolute;left:0;top:0;"
@@ -100,7 +100,7 @@ export default {
       immediate: true,
       handler (value) {
         if (value) {
-          loadImage(value).then(image => this.image = image)
+          this.setImage(value)
         } else {
           this.image = null
         }
@@ -120,9 +120,9 @@ export default {
       immediate: true,
       handler (value) {
         if (value) {
-          loadImage(value.src).then(image => this.image = image)
+          this.setImage(value.src)
         } else {
-          this.image = value
+          this.image = null
         }
       }
     },
@@ -155,9 +155,6 @@ export default {
       }
     },
   },
-  created () {
-    window.addEventListener('mouseup', this.onDocumentMouseUp)
-  },
   mounted () {
     if (!this.imageView) {
       this.imageView = new ImageView(this.$refs.viewCanvas)
@@ -169,10 +166,10 @@ export default {
       this.cropView = new CropView(this.$refs.cropCanvas, { ...DEFAULT_CROP_HANDLER_STYLE, ...this.cropHandlerStyle })
     }
   },
-  destroyed () {
-    window.removeEventListener('mouseup', this.onDocumentMouseUp)
-  },
   methods: {
+    setImage (path) {
+      loadImage(path).then(image => this.image = image)
+    },
     getPos ({ pageX, pageY }) {
       const { offsetLeft, offsetTop } = this.$refs.container
       return { x: pageX - offsetLeft, y: pageY - offsetTop }
@@ -195,21 +192,17 @@ export default {
         this.isDrawing = true
       }
     },
-    finishEdit () {
-      if (this.editMode !== EDIT_MODE.NONE) {
-        if (!this.isCrop && this.editMode === EDIT_MODE.RESIZE) {
-          this.resize()
-        }
-        this.resizeView.mode = null
-        this.cropView.mode = null
-        this.editMode = EDIT_MODE.NONE
-      }
-    },
     onMouseDown (event) {
       const curPos = this.getPos(event)
       this.trackerView.setMode(curPos)
       const { mode } = this.trackerView
-      this.editMode = mode == null ? EDIT_MODE.NONE : (mode === HANDLER_POS.MOVE ? EDIT_MODE.MOVE : EDIT_MODE.RESIZE)
+      if (mode == null) {
+        this.editMode = EDIT_MODE.NONE
+      } else {
+        window.addEventListener('mousemove', this.onDocumentMouseMove)
+        window.addEventListener('mouseup', this.onMouseUp)
+        this.editMode = mode === HANDLER_POS.MOVE ? EDIT_MODE.MOVE : EDIT_MODE.RESIZE
+      }
       this.prevPos = curPos
     },
     onMouseMove (event) {
@@ -226,10 +219,24 @@ export default {
       }
     },
     onMouseUp (event) {
-      this.finishEdit()
+      if (this.editMode !== EDIT_MODE.NONE) {
+        if (!this.isCrop && this.editMode === EDIT_MODE.RESIZE) {
+          this.resize()
+        }
+        this.resizeView.mode = null
+        this.cropView.mode = null
+        this.editMode = EDIT_MODE.NONE
+        this.prevPos = null
+      }
+      window.removeEventListener('mousemove', this.onDocumentMouseMove)
+      window.removeEventListener('mouseup', this.onMouseUp)
     },
-    onDocumentMouseUp (event) {
-      this.finishEdit()
+    onDocumentMouseMove (event) {
+      if (this.editMode === EDIT_MODE.RESIZE) {
+        this.trackerView.changeResizeBounds(this.getPos(event))
+        this.updateBounds()
+        this.render()
+      }
     },
     onClickCrop () {
       this.isCrop = false
