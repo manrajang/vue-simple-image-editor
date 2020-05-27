@@ -231,7 +231,7 @@ export default {
     onMouseUp (event) {
       if (this.editMode !== EDIT_MODE.NONE) {
         const bounds = this.trackerView.getComputedBounds()
-        // bounds 갱신
+        // 변경된 bounds로 갱신
         this.imageView.setBounds(bounds)
         this.resizeView.setBounds(bounds)
         this.cropView.setBounds(bounds)
