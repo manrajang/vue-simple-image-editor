@@ -186,8 +186,8 @@ export default {
     },
     updateBounds () {
       if (!this.isCrop) {
-        const bounds = { ...this.trackerView.renderBounds }
-        this.imageView.renderBounds = bounds
+        const bounds = { ...this.trackerView.bounds }
+        this.imageView.setBounds(bounds)
         this.cropView.renderBounds = { ...bounds }
         this.cropView.boundaryBounds = { ...bounds }
       }
@@ -230,12 +230,6 @@ export default {
     },
     onMouseUp (event) {
       if (this.editMode !== EDIT_MODE.NONE) {
-        const bounds = this.trackerView.getComputedBounds()
-        // 변경된 bounds로 갱신
-        this.imageView.setBounds(bounds)
-        this.resizeView.setBounds(bounds)
-        this.cropView.setBounds(bounds)
-        this.cropView.boundaryBounds = { ...bounds }
         if (!this.isCrop && this.editMode === EDIT_MODE.RESIZE) {
           this.resize()
         }

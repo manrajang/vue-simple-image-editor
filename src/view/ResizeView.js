@@ -1,6 +1,6 @@
 import RenderView from './RenderView'
 import { HANDLER_POS } from '@/constants'
-import { scale, rotate, translate, compose, applyToPoint } from 'transformation-matrix'
+import { rotate, compose, applyToPoint } from 'transformation-matrix'
 
 function dist (p1, p2) {
   return Math.sqrt((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y))
@@ -8,6 +8,20 @@ function dist (p1, p2) {
 
 function point (x, y) {
   return { x, y }
+}
+
+function convertBounds ({ left: newLeft, top: newTop, right: newRight, bottom: newBottom }, { left, top, right, bottom, angle }) {
+  const matrix = compose(
+    rotate(angle * Math.PI / 180, left + (right - left) / 2, top + (bottom - top) / 2),
+    rotate(-angle * Math.PI / 180, newLeft + (newRight - newLeft) / 2, newTop + (newBottom - newTop) / 2)
+  )
+  const { x: l, y: t } = applyToPoint(matrix, { x: newLeft, y: newTop })
+  const { x: r, y: b } = applyToPoint(matrix, { x: newRight, y: newBottom })
+  return { left: l, top: t, right: r, bottom: b, angle }
+}
+
+function convertPoint ({ x, y }, { left, top, right, bottom, angle }) {
+  return applyToPoint(compose(rotate(-angle * Math.PI / 180, left + (right - left) / 2, top + (bottom - top) / 2)), { x, y })
 }
 
 export default class ResizeView extends RenderView {
@@ -24,7 +38,6 @@ export default class ResizeView extends RenderView {
     if (!this.bounds) {
       return
     }
-    const { left: renderL, top: renderT, right: renderR, bottom: renderB } = this.renderBounds
     const { left, top, right, bottom, angle } = this.bounds
     const centerX = left + (right - left) / 2
     const centerY = top + (bottom - top) / 2
@@ -32,7 +45,7 @@ export default class ResizeView extends RenderView {
     this.ctx.translate(centerX, centerY)
     this.ctx.rotate(angle * Math.PI / 180)
     this.ctx.translate(-centerX, -centerY)
-    this.drawRect(renderL, renderT, renderR - renderL, renderB - renderT)
+    this.drawRect(left, top, right - left, bottom - top)
     this.drawHandlerList()
     this.ctx.restore()
   }
@@ -47,7 +60,7 @@ export default class ResizeView extends RenderView {
     this.ctx.fillRect(x - this.handlerSize, y - this.handlerSize, width, width)
   }
   drawHandlerList () {
-    const { left, top, right, bottom } = this.renderBounds
+    const { left, top, right, bottom } = this.bounds
     const centerX = left + (right - left) / 2
     const centerY = top + (bottom - top) / 2
     this.drawHandler(left, top)
@@ -59,31 +72,27 @@ export default class ResizeView extends RenderView {
     this.drawHandler(left, centerY)
     this.drawHandler(right, centerY)
   }
-  convertPoint ({ x, y }) {
-    const { left, top, right, bottom, angle } = this.bounds
-    return applyToPoint(compose(rotate(-angle * Math.PI / 180, left + (right - left) / 2, top + (bottom - top) / 2)), { x, y })
-  }
-  setMode ({ x: _x, y: _y }) {
+  setMode (mousePoint) {
     const { left, top, right, bottom } = this.bounds
     const centerX = left + (right - left) / 2
     const centerY = top + (bottom - top) / 2
-    const mousePoint = this.convertPoint({ x: _x, y: _y })
-    const { x, y } = mousePoint
-    if (dist(mousePoint, point(left, top)) <= this.handlerSize) {
+    const newMousePoint = convertPoint(mousePoint, this.bounds)
+    const { x, y } = newMousePoint
+    if (dist(newMousePoint, point(left, top)) <= this.handlerSize) {
       this.mode = HANDLER_POS.TOP_LEFT
-    } else if (dist(mousePoint, point(right, top)) <= this.handlerSize) {
+    } else if (dist(newMousePoint, point(right, top)) <= this.handlerSize) {
       this.mode = HANDLER_POS.TOP_RIGHT
-    } else if (dist(mousePoint, point(left, bottom)) <= this.handlerSize) {
+    } else if (dist(newMousePoint, point(left, bottom)) <= this.handlerSize) {
       this.mode = HANDLER_POS.BOTTOM_LEFT
-    } else if (dist(mousePoint, point(right, bottom)) <= this.handlerSize) {
+    } else if (dist(newMousePoint, point(right, bottom)) <= this.handlerSize) {
       this.mode = HANDLER_POS.BOTTOM_RIGHT
-    } else if (dist(mousePoint, point(centerX, top)) <= this.handlerSize) {
+    } else if (dist(newMousePoint, point(centerX, top)) <= this.handlerSize) {
       this.mode = HANDLER_POS.TOP
-    } else if (dist(mousePoint, point(centerX, bottom)) <= this.handlerSize) {
+    } else if (dist(newMousePoint, point(centerX, bottom)) <= this.handlerSize) {
       this.mode = HANDLER_POS.BOTTOM
-    } else if (dist(mousePoint, point(left, centerY)) <= this.handlerSize) {
+    } else if (dist(newMousePoint, point(left, centerY)) <= this.handlerSize) {
       this.mode = HANDLER_POS.LEFT
-    } else if (dist(mousePoint, point(right, centerY)) <= this.handlerSize) {
+    } else if (dist(newMousePoint, point(right, centerY)) <= this.handlerSize) {
       this.mode = HANDLER_POS.RIGHT
     } else if (x > left && y > top && x < right && y < bottom) {
       this.mode = HANDLER_POS.MOVE
@@ -91,11 +100,11 @@ export default class ResizeView extends RenderView {
       this.mode = null
     }
   }
-  changeResizeBounds ({ x: _x, y: _y }) {
-    const { x, y } = this.convertPoint({ x: _x, y: _y })
-    const { left, top, right, bottom } = this.renderBounds
+  changeResizeBounds (mousePoint) {
+    const { x, y } = convertPoint(mousePoint, this.bounds)
+    const { left, top, right, bottom } = this.bounds
     const { left: boundaryLeft, top: boundaryTop, right: boundaryRight, bottom: boundaryBottom } = this.boundaryBounds
-    const newBounds = { ...this.renderBounds }
+    const newBounds = { ...this.bounds }
     if ((this.mode & HANDLER_POS.LEFT) === HANDLER_POS.LEFT) {
       if (x < boundaryLeft) {
         newBounds.left = boundaryLeft
@@ -132,38 +141,12 @@ export default class ResizeView extends RenderView {
         newBounds.bottom = y
       }
     }
-    this.renderBounds = newBounds
+    this.setBounds(convertBounds(newBounds, this.bounds))
   }
   changeMoveBounds ({ x: curPosX, y: curPosY }, { x: prevPosX, y: prevPosY }) {
-    const { left, top, right, bottom } = this.bounds
-    const { left: boundaryLeft, top: boundaryTop, right: boundaryRight, bottom: boundaryBottom } = this.boundaryBounds
-    const width = right - left
-    const height = bottom - top
-    let newBoundsX = left + (curPosX - prevPosX)
-    let newBoundsY = top + (curPosY - prevPosY)
-    if (newBoundsX < boundaryLeft) {
-      newBoundsX = boundaryLeft
-    }
-    if (newBoundsY < boundaryTop) {
-      newBoundsY = boundaryTop
-    }
-    if (newBoundsX + width > boundaryRight) {
-      newBoundsX = boundaryRight - width
-    }
-    if (newBoundsY + height > boundaryBottom) {
-      newBoundsY = boundaryBottom - height
-    }
-    this.bounds = { left: newBoundsX, top: newBoundsY, right: newBoundsX + width, bottom: newBoundsY + height }
-  }
-  getComputedBounds () {
-    const { left: renderL, top: renderT, right: renderR, bottom: renderB } = this.renderBounds
     const { left, top, right, bottom, angle } = this.bounds
-    const matrix = compose(
-      rotate(angle * Math.PI / 180, left + (right - left) / 2, top + (bottom - top) / 2),
-      rotate(-angle * Math.PI / 180, renderL + (renderR - renderL) / 2, renderT + (renderB - renderT) / 2)
-    )
-    const { x: l, y: t } = applyToPoint(matrix, { x: renderL, y: renderT })
-    const { x: r, y: b } = applyToPoint(matrix, { x: renderR, y: renderB })
-    return { left: l, top: t, right: r, bottom: b, angle }
+    const newBoundsX = left + (curPosX - prevPosX)
+    const newBoundsY = top + (curPosY - prevPosY)
+    this.setBounds({ left: newBoundsX, top: newBoundsY, right: newBoundsX + right - left, bottom: newBoundsY +  bottom - top, angle })
   }
 }

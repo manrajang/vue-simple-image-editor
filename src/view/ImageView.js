@@ -9,7 +9,6 @@ export default class ImageView extends RenderView {
     if (!this.image) {
       return
     }
-    const { left: renderL, top: renderT, right: renderR, bottom: renderB } = this.renderBounds
     const { left, top, right, bottom, angle } = this.bounds
     const centerX = left + (right - left) / 2
     const centerY = top + (bottom - top) / 2
@@ -18,7 +17,7 @@ export default class ImageView extends RenderView {
     this.ctx.translate(centerX, centerY)
     this.ctx.rotate(angle * Math.PI / 180)
     this.ctx.translate(-centerX, -centerY)
-    this.ctx.drawImage(this.image, renderL, renderT, renderR - renderL, renderB - renderT)
+    this.ctx.drawImage(this.image, left, top, right - left, bottom - top)
     this.ctx.restore()
   }
   crop (cropBounds) {
