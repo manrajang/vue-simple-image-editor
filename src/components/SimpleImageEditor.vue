@@ -133,31 +133,34 @@ export default {
       }
     },
     image (value) {
+      this.imageView.image = value
       if (value) {
         const { width, height } = value
         let x = (this.width - width) / 2
         let y = (this.height - height) / 2
-        const bounds = { left: x, top: y, right: x + width, bottom: y + height }
-        this.imageView.bounds = bounds
-        this.resizeView.bounds = { ...bounds }
-        this.resizeView.boundaryBounds = { left: 0, top: 0, right: this.width, bottom: this.height }
+        const bounds = { left: x, top: y, right: x + width, bottom: y + height, angle: 45 }
+        this.imageView.setBounds(bounds)
+        this.resizeView.setBounds(bounds)
         if (this.fixedCropWidth && this.fixedCropHeight && this.fixedCropWidth < width && this.fixedCropHeight < height) {
           x = (this.width - this.fixedCropWidth) / 2
           y = (this.height - this.fixedCropHeight) / 2
           this.cropView.isFixedCrop = true
-          this.cropView.bounds = { left: x, top: y, right: x + this.fixedCropWidth, bottom: y + this.fixedCropHeight }
+          this.cropView.setBounds({ left: x, top: y, right: x + this.fixedCropWidth, bottom: y + this.fixedCropHeight })
         } else {
-          this.cropView.bounds = { ...bounds }
+          this.cropView.setBounds(bounds)
         }
+        this.resizeView.boundaryBounds = { left: 0, top: 0, right: this.width, bottom: this.height }
         this.cropView.boundaryBounds = { ...bounds }
-        this.imageView.image = value
         this.render()
       } else {
-        this.imageView.bounds = null
-        this.resizeView.bounds = null
+        this.imageView.setBounds(null)
+        this.resizeView.setBounds(null)
+        this.cropView.setBounds(null)
         this.resizeView.boundaryBounds = null
-        this.cropView.bounds = null
         this.cropView.boundaryBounds = null
+        this.imageView.clearRect()
+        this.resizeView.clearRect()
+        this.cropView.clearRect()
       }
     },
   },
@@ -183,9 +186,9 @@ export default {
     },
     updateBounds () {
       if (!this.isCrop) {
-        const bounds = { ...this.trackerView.bounds }
-        this.imageView.bounds = bounds
-        this.cropView.bounds = { ...bounds }
+        const bounds = { ...this.trackerView.renderBounds }
+        this.imageView.renderBounds = bounds
+        this.cropView.renderBounds = { ...bounds }
         this.cropView.boundaryBounds = { ...bounds }
       }
     },
@@ -227,6 +230,12 @@ export default {
     },
     onMouseUp (event) {
       if (this.editMode !== EDIT_MODE.NONE) {
+        const bounds = this.trackerView.getComputedBounds()
+        // bounds 갱신
+        this.imageView.setBounds(bounds)
+        this.resizeView.setBounds(bounds)
+        this.cropView.setBounds(bounds)
+        this.cropView.boundaryBounds = { ...bounds }
         if (!this.isCrop && this.editMode === EDIT_MODE.RESIZE) {
           this.resize()
         }

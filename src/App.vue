@@ -6,7 +6,7 @@
     <br/>
     <div>Resize &amp; Crop Mode</div>
     <button type="button" @click="onClickSaveImageFileInMutliMode">Save Image File (Multi)</button>
-    <simple-image-editor ref="multiCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" @changeImage="onChangeImage"/>
+    <simple-image-editor ref="multiCanvas" style="border: 1px solid red;" :width="2000" :height="2000" :imageSrc="imageSrc" :imageObj="imageObj" @changeImage="onChangeImage"/>
     <br/>
     <div>Resize &amp; Crop Mode (Fix)</div>
     <button type="button" @click="onClickSaveImageFileInMutliModeWithFixedCrop">Save Image File (Multi)</button>
