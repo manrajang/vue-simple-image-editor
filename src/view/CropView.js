@@ -29,6 +29,7 @@ export default class CropView extends ResizeView {
     this.ctx.fillRect(x, y, width, height)
     this.ctx.globalAlpha = 1
   }
+  drawRotation () {}
   drawHandlerList () {
     if (!this.isFixedCrop) {
       super.drawHandlerList()
@@ -46,6 +47,9 @@ export default class CropView extends ResizeView {
       return
     }
     super.setMode(mousePoint)
+    if (this.mode === HANDLER_POS.ROTATION) {
+      this.mode = null
+    }
   }
   changeResizeBounds (mousePoint) {
     super.changeResizeBounds(mousePoint)

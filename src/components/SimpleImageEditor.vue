@@ -143,7 +143,7 @@ export default {
         const { width, height } = value
         const x = (this.width - width) / 2
         const y = (this.height - height) / 2
-        const bounds = { left: x, top: y, right: x + width, bottom: y + height, angle: 45 }
+        const bounds = { left: x, top: y, right: x + width, bottom: y + height, angle: 0 }
         let cropBounds = bounds
         if (this.cropWidth && this.cropHeight && this.cropWidth < width && this.cropHeight < height) {
           const x = (this.width - this.cropWidth) / 2
@@ -204,7 +204,16 @@ export default {
       } else {
         window.addEventListener('mousemove', this.onMouseMove)
         window.addEventListener('mouseup', this.onMouseUp)
-        this.editMode = mode === HANDLER_POS.MOVE ? EDIT_MODE.MOVE : EDIT_MODE.RESIZE
+        switch (mode) {
+          case HANDLER_POS.MOVE:
+            this.editMode = EDIT_MODE.MOVE
+            break
+          case HANDLER_POS.ROTATION:
+            this.editMode = EDIT_MODE.ROTATION
+            break
+          default:
+            this.editMode = EDIT_MODE.RESIZE
+        }
         this.prevPos = curPos
       }
     },
@@ -215,6 +224,8 @@ export default {
           this.trackerView.changeResizeBounds(curPos)
         } else if (this.editMode === EDIT_MODE.MOVE) {
           this.trackerView.changeMoveBounds(curPos, this.prevPos)
+        } else if (this.editMode === EDIT_MODE.ROTATION) {
+          this.trackerView.changeAngle(curPos)
         }
         if (!this.isCrop) {
           this.imageView.setBounds(this.resizeView.bounds)

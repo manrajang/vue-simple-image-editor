@@ -55,13 +55,25 @@ export default class ResizeView extends RenderView {
   }
   drawHandler (x, y) {
     const width = 2 * this.handlerSize
-    this.ctx.fillStyle = this.handlerFillColor
     this.ctx.fillRect(x - this.handlerSize, y - this.handlerSize, width, width)
+  }
+  drawRotation () {
+    const { left, top, right } = this.bounds
+    const centerX = left + (right - left) / 2
+    const rotationY = top - 50
+    this.ctx.beginPath()
+    this.ctx.moveTo(centerX, top)
+    this.ctx.lineTo(centerX, rotationY)
+    this.ctx.stroke()
+    this.ctx.beginPath()
+    this.ctx.arc(centerX, rotationY, this.handlerSize, 0, 2 * Math.PI)
+    this.ctx.fill()
   }
   drawHandlerList () {
     const { left, top, right, bottom } = this.bounds
     const centerX = left + (right - left) / 2
     const centerY = top + (bottom - top) / 2
+    this.ctx.fillStyle = this.handlerFillColor
     this.drawHandler(left, top)
     this.drawHandler(right, top)
     this.drawHandler(left, bottom)
@@ -70,11 +82,13 @@ export default class ResizeView extends RenderView {
     this.drawHandler(centerX, bottom)
     this.drawHandler(left, centerY)
     this.drawHandler(right, centerY)
+    this.drawRotation()
   }
   setMode (mousePoint) {
     const { left, top, right, bottom } = this.bounds
     const centerX = left + (right - left) / 2
     const centerY = top + (bottom - top) / 2
+    const rotationY = top - 50
     const newMousePoint = convertPoint(mousePoint, this.bounds)
     const { x, y } = newMousePoint
     if (dist(newMousePoint, point(left, top)) <= this.handlerSize) {
@@ -93,6 +107,8 @@ export default class ResizeView extends RenderView {
       this.mode = HANDLER_POS.LEFT
     } else if (dist(newMousePoint, point(right, centerY)) <= this.handlerSize) {
       this.mode = HANDLER_POS.RIGHT
+    } else if (dist(newMousePoint, point(centerX, rotationY)) <= this.handlerSize) {
+      this.mode = HANDLER_POS.ROTATION
     } else if (x > left && y > top && x < right && y < bottom) {
       this.mode = HANDLER_POS.MOVE
     } else {
@@ -138,5 +154,17 @@ export default class ResizeView extends RenderView {
     const newBoundsX = left + (curPosX - prevPosX)
     const newBoundsY = top + (curPosY - prevPosY)
     this.setBounds({ left: newBoundsX, top: newBoundsY, right: newBoundsX + right - left, bottom: newBoundsY +  bottom - top, angle })
+  }
+  changeAngle ({ x, y }) {
+    const { left, top, right, bottom } = this.bounds
+    const centerX = left + (right - left) / 2
+    const centerY = top + (bottom - top) / 2
+    let angle
+    if (x > centerX) {
+      angle = 90 + (Math.atan2(y - centerY, x - centerX) * 180) / Math.PI
+    } else {
+      angle = 270 + (Math.atan2(centerY - y, centerX - x) * 180) / Math.PI
+    }
+    this.setBounds({ left, top, right, bottom, angle })
   }
 }

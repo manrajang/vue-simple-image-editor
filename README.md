@@ -15,11 +15,11 @@ Vue.use(VueSimpleImageEditor)
 ```html
 <div>Resize &amp; Crop Mode</div>
 <button type="button" @click="onClickSaveImageFileInMutliMode">Save Image File (Multi)</button>
-<simple-image-editor ref="multiCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" @changeImage="onChangeImage"/>
+<simple-image-editor ref="multiCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="200" :cropHeight="200" @changeImage="onChangeImage"/>
 
 <div>Resize &amp; Crop Mode (Fix)</div>
 <button type="button" @click="onClickSaveImageFileInMutliModeWithFixedCrop">Save Image File (Multi)</button>
-<simple-image-editor ref="multiCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" :fixedCropWidth="500" :fixedCropHeight="500" @changeImage="onChangeImage"/>
+<simple-image-editor ref="multiCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="200" :cropHeight="200" isFixedCrop @changeImage="onChangeImage"/>
 
 <div>Resize Mode</div>
 <button type="button" @click="onClickSaveImageFileInResizeMode">Save Image File (Resize)</button>
@@ -33,11 +33,10 @@ Vue.use(VueSimpleImageEditor)
 <div>Crop Mode (Fix)</div>
 <button type="button" @click="onClickSaveImageFileInCropModeWithFixedCrop">Save Image File (Crop)</button>
 <button type="button" @click="onClickSaveCropWithFixedCrop">Save Crop</button>
-<simple-image-editor ref="cropCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" isCropMode :fixedCropWidth="500" :fixedCropHeight="500" @changeImage="onChangeImage"/>
-<br/>
+<simple-image-editor ref="cropCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" isCropMode :cropWidth="200" :cropHeight="200" isFixedCrop @changeImage="onChangeImage"/>
 ```
 ```js
-import VueSimpleImageEditor from 'vue-image-fade-scroll'
+import VueSimpleImageEditor from 'vue-simple-image-editor'
 
 components: {
   VueSimpleImageEditor
@@ -53,14 +52,15 @@ components: {
 | imageObj                      | Image              | null                         | Image Object                             |
 | isResizeMode                  | Boolean            | false                        | Only Resize Mode                         |
 | isCropMode                    | Boolean            | false                        | Only Crop Mode                           |
+| isFixedCrop                   | Boolean            | false                        | Fixed Crop (Do Not Resize)               |
 | resizeHandlerStyle            | Object             | DEFAULT_RESIZE_HANDLER_STYLE | Reisze Handler Style                     |
 | cropHandlerStyle              | Object             | DEFAULT_CROP_HANDLER_STYLE   | Crop Handler Style                       |
 | cropButtonText                | String             | 'Crop'                       | Crop Button Text                         |
 | cropButtonStyle               | Object             | null                         | Crop Button Style                        |
 | cropSaveButtonText            | String             | 'Save Crop'                  | Crop Save Button Text                    |
 | cropSaveButtonStyle           | Object             | null                         | Crop Save Button Style                   |
-| fixedCropWidth                | Number             | 0                            | Fixed Crop Width                         |
-| fixedCropHeight               | Number             | 0                            | Fixed Crop Height                        |
+| cropWidth                     | Number             | 0                            | Crop Width                               |
+| cropHeight                    | Number             | 0                            | Crop Height                              |
 
 ### DEFAULT_RESIZE_HANDLER_STYLE
 | Prop                          | Type               | Default     | Description                              |

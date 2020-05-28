@@ -6,11 +6,11 @@
     <br/>
     <div>Resize &amp; Crop Mode</div>
     <button type="button" @click="onClickSaveImageFileInMutliMode">Save Image File (Multi)</button>
-    <simple-image-editor ref="multiCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="500" :cropHeight="500" @changeImage="onChangeImage"/>
+    <simple-image-editor ref="multiCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="200" :cropHeight="200" @changeImage="onChangeImage"/>
     <br/>
     <div>Resize &amp; Crop Mode (Fix)</div>
     <button type="button" @click="onClickSaveImageFileInMutliModeWithFixedCrop">Save Image File (Multi)</button>
-    <simple-image-editor ref="multiCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="500" :cropHeight="500" isFixedCrop @changeImage="onChangeImage"/>
+    <simple-image-editor ref="multiCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="200" :cropHeight="200" isFixedCrop @changeImage="onChangeImage"/>
     <br/>
     <div>Resize Mode</div>
     <button type="button" @click="onClickSaveImageFileInResizeMode">Save Image File (Resize)</button>
@@ -24,7 +24,7 @@
     <div>Crop Mode (Fix)</div>
     <button type="button" @click="onClickSaveImageFileInCropModeWithFixedCrop">Save Image File (Crop)</button>
     <button type="button" @click="onClickSaveCropWithFixedCrop">Save Crop</button>
-    <simple-image-editor ref="cropCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" isCropMode :cropWidth="500" :cropHeight="500" isFixedCrop @changeImage="onChangeImage"/>
+    <simple-image-editor ref="cropCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" isCropMode :cropWidth="200" :cropHeight="200" isFixedCrop @changeImage="onChangeImage"/>
     <br/>
     <div>Origin Image</div>
     <div ref="container"></div>
@@ -34,7 +34,7 @@
 <script>
 import SimpleImageEditor from '@/components/SimpleImageEditor'
 
-const IMAGE_PATH = 'img/a.png'
+const IMAGE_PATH = 'img/a.jpg'
 
 export default {
   name: 'app',
