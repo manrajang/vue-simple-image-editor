@@ -28,7 +28,12 @@
       style="position:absolute;left:0;top:0;"
     ></canvas>
     <template v-if="isMultiMode">
-      <button v-if="isCrop" style="position:absolute;right:0;top:0;" type="button" :style="cropSaveButtonStyle" @click="onClickCrop">{{ cropSaveButtonText }}</button>
+      <template v-if="isCrop" >
+        <div style="position:absolute;right:0;top:0;">
+          <button type="button" :style="cropSaveButtonStyle" @click="onClickCrop">{{ cropSaveButtonText }}</button>
+          <button style="margin-left:10px;" type="button" :style="cropCancelButtonStyle" @click="isCrop = false">{{ cropCancelButtonText }}</button>
+        </div>
+      </template>
       <button v-else style="position:absolute;right:0;top:0;" type="button" :style="cropButtonStyle" @click="isCrop = true">{{ cropButtonText }}</button>
     </template>
   </div>
@@ -79,6 +84,8 @@ export default {
     cropButtonStyle: { type: Object, default: null },
     cropSaveButtonText: { type: String, default: 'Save Crop' },
     cropSaveButtonStyle: { type: Object, default: null },
+    cropCancelButtonText: { type: String, default: 'Cancel Crop' },
+    cropCancelButtonStyle: { type: Object, default: null },
     cropWidth: { type: Number, default: 0 },
     cropHeight: { type: Number, default: 0 },
   },

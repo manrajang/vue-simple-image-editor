@@ -59,6 +59,8 @@ components: {
 | cropButtonStyle               | Object             | null                         | Crop Button Style                        |
 | cropSaveButtonText            | String             | 'Save Crop'                  | Crop Save Button Text                    |
 | cropSaveButtonStyle           | Object             | null                         | Crop Save Button Style                   |
+| cropCancelButtonText          | String             | 'Cancel Crop'                | Crop Cancel Button Text                  |
+| cropCancelButtonStyle         | Object             | null                         | Crop Cancel Button Style                 |
 | cropWidth                     | Number             | 0                            | Crop Width                               |
 | cropHeight                    | Number             | 0                            | Crop Height                              |
 
