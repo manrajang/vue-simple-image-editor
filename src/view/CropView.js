@@ -2,11 +2,12 @@ import ResizeView from './ResizeView'
 import { HANDLER_POS } from '@/constants'
 
 export default class CropView extends ResizeView {
-  constructor (canvas, style) {
+  constructor (canvas, style, boundaryBounds) {
     super(canvas, style)
     const { fillColor, fillAlpha } = style
     this.fillColor = fillColor
     this.fillAlpha = fillAlpha
+    this.boundaryBounds = boundaryBounds
     this.isFixedCrop = false
   }
   draw () {
@@ -15,6 +16,9 @@ export default class CropView extends ResizeView {
     }
     this.clearRect()
     super.draw()
+  }
+  setBounds (bounds) {
+    this.bounds = bounds ? { ...bounds, angle: 0 } : null
   }
   drawRect (x, y, width, height) {
     this.ctx.strokeStyle = this.lineStrokeStyle
@@ -42,5 +46,53 @@ export default class CropView extends ResizeView {
       return
     }
     super.setMode(mousePoint)
+  }
+  changeResizeBounds (mousePoint) {
+    super.changeResizeBounds(mousePoint)
+    const { x, y } = mousePoint
+    const { left: boundaryLeft, top: boundaryTop, right: boundaryRight, bottom: boundaryBottom } = this.boundaryBounds
+    const newBounds = { ...this.bounds }
+    if ((this.mode & HANDLER_POS.LEFT) === HANDLER_POS.LEFT) {
+      if (x < boundaryLeft) {
+        newBounds.left = boundaryLeft
+      }
+    }
+    if ((this.mode & HANDLER_POS.TOP) === HANDLER_POS.TOP) {
+      if (y < boundaryTop) {
+        newBounds.top = boundaryTop
+      }
+    }
+    if ((this.mode & HANDLER_POS.RIGHT) === HANDLER_POS.RIGHT) {
+      if (x > boundaryRight) {
+        newBounds.right = boundaryRight
+      }
+    }
+    if ((this.mode & HANDLER_POS.BOTTOM) === HANDLER_POS.BOTTOM) {
+      if (y > boundaryBottom) {
+        newBounds.bottom = boundaryBottom
+      }
+    }
+    this.setBounds(newBounds)
+  }
+  changeMoveBounds ({ x: curPosX, y: curPosY }, { x: prevPosX, y: prevPosY }) {
+    const { left, top, right, bottom } = this.bounds
+    const { left: boundaryLeft, top: boundaryTop, right: boundaryRight, bottom: boundaryBottom } = this.boundaryBounds
+    const width = right - left
+    const height = bottom - top
+    let newBoundsX = left + (curPosX - prevPosX)
+    let newBoundsY = top + (curPosY - prevPosY)
+    if (left < boundaryLeft) {
+      newBoundsX = boundaryLeft
+    }
+    if (newBoundsY < boundaryTop) {
+      newBoundsY = boundaryTop
+    }
+    if (newBoundsX + width > boundaryRight) {
+      newBoundsX = boundaryRight - width
+    }
+    if (newBoundsY + height > boundaryBottom) {
+      newBoundsY = boundaryBottom - height
+    }
+    this.setBounds({ left: newBoundsX, top: newBoundsY, right: newBoundsX + width, bottom: newBoundsY + height })
   }
 }

@@ -1,4 +1,9 @@
 import RenderView from './RenderView'
+import { rotate, compose, applyToPoint } from 'transformation-matrix'
+
+function convertPoint ({ x, y }, { left, top, right, bottom, angle }) {
+  return applyToPoint(compose(rotate(angle * Math.PI / 180, (right - left) / 2, (bottom - top) / 2)), { x, y })
+}
 
 export default class ImageView extends RenderView {
   constructor (canvas) {
@@ -20,26 +25,37 @@ export default class ImageView extends RenderView {
     this.ctx.drawImage(this.image, left, top, right - left, bottom - top)
     this.ctx.restore()
   }
-  crop (cropBounds) {
-    const { left, top } = this.bounds
-    const { left: cropLeft, top: cropTop, right: cropRight, bottom: cropBottom } = cropBounds
+  crop ({ left: cropLeft, top: cropTop, right: cropRight, bottom: cropBottom }) {
     const width = cropRight - cropLeft
     const height = cropBottom - cropTop
     const canvas = document.createElement('canvas')
     canvas.width = width
     canvas.height = height
-    canvas.getContext('2d').drawImage(this.image, cropLeft - left, cropTop - top, width, height, 0, 0, width, height)
+    canvas.getContext('2d').drawImage(this.canvas, cropLeft, cropTop, width, height, 0, 0, width, height)
     this.image.src = canvas.toDataURL()
-    this.bounds = { left: cropLeft, top: cropTop, right: cropRight, bottom: cropBottom }
   }
   createResizeCanvas () {
-    const { left, top, right, bottom } = this.bounds
+    const { left, top, right, bottom, angle } = this.bounds
     const width = right - left
     const height = bottom - top
+    const centerX = width / 2
+    const centerY = height / 2
+    const lt = convertPoint({ x: 0, y: 0 }, this.bounds)
+    const lb = convertPoint({ x: 0, y: height }, this.bounds)
+    const rt = convertPoint({ x: width, y: 0 }, this.bounds)
+    const rb = convertPoint({ x: width, y: height }, this.bounds)
+    const l = Math.min(lt.x, lb.x, rt.x, rb.x)
+    const t = Math.min(lt.y, lb.y, rt.y, rb.y)
+    const r = Math.max(lt.x, lb.x, rt.x, rb.x)
+    const b = Math.max(lt.y, lb.y, rt.y, rb.y)
     const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    canvas.getContext('2d').drawImage(this.image, 0, 0, width, height)
+    const ctx = canvas.getContext('2d')
+    canvas.width = r - l
+    canvas.height = b - t
+    ctx.translate(Math.abs(l) + centerX, Math.abs(t) + centerY)
+    ctx.rotate(angle * Math.PI / 180)
+    ctx.translate(-centerX, -centerY)
+    ctx.drawImage(this.image, 0, 0, width, height)
     return canvas
   }
   resize () {

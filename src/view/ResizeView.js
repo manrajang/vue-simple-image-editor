@@ -31,7 +31,6 @@ export default class ResizeView extends RenderView {
     this.strokeWidth = strokeWidth
     this.handlerFillColor = handlerFillColor
     this.handlerSize = handlerSize
-    this.boundaryBounds = null
     this.mode = null
   }
   draw () {
@@ -103,39 +102,30 @@ export default class ResizeView extends RenderView {
   changeResizeBounds (mousePoint) {
     const { x, y } = convertPoint(mousePoint, this.bounds)
     const { left, top, right, bottom } = this.bounds
-    const { left: boundaryLeft, top: boundaryTop, right: boundaryRight, bottom: boundaryBottom } = this.boundaryBounds
     const newBounds = { ...this.bounds }
     if ((this.mode & HANDLER_POS.LEFT) === HANDLER_POS.LEFT) {
-      if (x < boundaryLeft) {
-        newBounds.left = boundaryLeft
-      } else if (x > right - this.handlerSize) {
+      if (x > right - this.handlerSize) {
         newBounds.left = right - this.handlerSize
       } else {
         newBounds.left = x
       }
     }
     if ((this.mode & HANDLER_POS.TOP) === HANDLER_POS.TOP) {
-      if (y < boundaryTop) {
-        newBounds.top = boundaryTop
-      } else if (y > bottom - this.handlerSize) {
+      if (y > bottom - this.handlerSize) {
         newBounds.top = bottom - this.handlerSize
       } else {
         newBounds.top = y
       }
     }
     if ((this.mode & HANDLER_POS.RIGHT) === HANDLER_POS.RIGHT) {
-      if (x > boundaryRight) {
-        newBounds.right = boundaryRight
-      } else if (x < left + this.handlerSize) {
+      if (x < left + this.handlerSize) {
         newBounds.right = left + this.handlerSize
       } else {
         newBounds.right = x
       }
     }
     if ((this.mode & HANDLER_POS.BOTTOM) === HANDLER_POS.BOTTOM) {
-      if (y > boundaryBottom) {
-        newBounds.bottom = boundaryBottom
-      } else if (y < top + this.handlerSize) {
+      if (y < top + this.handlerSize) {
         newBounds.bottom = top + this.handlerSize
       } else {
         newBounds.bottom = y

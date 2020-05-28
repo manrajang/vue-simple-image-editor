@@ -72,14 +72,15 @@ export default {
     imageObj: { type: Image, default: null },
     isResizeMode: { type: Boolean, default: false },
     isCropMode: { type: Boolean, defaul: false },
+    isFixedCrop: { type: Boolean, defaul: false },
     resizeHandlerStyle: { type: Object, default: () => ({}) },
     cropHandlerStyle: { type: Object, default: () => ({}) },
     cropButtonText: { type: String, default: 'Crop' },
     cropButtonStyle: { type: Object, default: null },
     cropSaveButtonText: { type: String, default: 'Save Crop' },
     cropSaveButtonStyle: { type: Object, default: null },
-    fixedCropWidth: { type: Number, default: 0 },
-    fixedCropHeight: { type: Number, default: 0 },
+    cropWidth: { type: Number, default: 0 },
+    cropHeight: { type: Number, default: 0 },
   },
   data () {
     return {
@@ -112,16 +113,6 @@ export default {
         }
       }
     },
-    isCropMode: {
-      immediate: true,
-      handler (value) {
-        this.isCrop = value
-      }
-    },
-    isCrop (value) {
-      this.render()
-      this.$emit('changeCropMode', value)
-    },
     imageObj: {
       immediate: true,
       handler (value) {
@@ -132,32 +123,42 @@ export default {
         }
       }
     },
+    isCropMode: {
+      immediate: true,
+      handler (value) {
+        this.isCrop = value
+      }
+    },
+    isFixedCrop (value) {
+      this.cropView.isFixedCrop = value
+      this.render()
+    },
+    isCrop (value) {
+      this.render()
+      this.$emit('changeCropMode', value)
+    },
     image (value) {
       this.imageView.image = value
       if (value) {
         const { width, height } = value
-        let x = (this.width - width) / 2
-        let y = (this.height - height) / 2
+        const x = (this.width - width) / 2
+        const y = (this.height - height) / 2
         const bounds = { left: x, top: y, right: x + width, bottom: y + height, angle: 45 }
+        let cropBounds = bounds
+        if (this.cropWidth && this.cropHeight && this.cropWidth < width && this.cropHeight < height) {
+          const x = (this.width - this.cropWidth) / 2
+          const y = (this.height - this.cropHeight) / 2
+          cropBounds = { left: x, top: y, right: x + this.cropWidth, bottom: y + this.cropHeight }
+        }
         this.imageView.setBounds(bounds)
         this.resizeView.setBounds(bounds)
-        if (this.fixedCropWidth && this.fixedCropHeight && this.fixedCropWidth < width && this.fixedCropHeight < height) {
-          x = (this.width - this.fixedCropWidth) / 2
-          y = (this.height - this.fixedCropHeight) / 2
-          this.cropView.isFixedCrop = true
-          this.cropView.setBounds({ left: x, top: y, right: x + this.fixedCropWidth, bottom: y + this.fixedCropHeight })
-        } else {
-          this.cropView.setBounds(bounds)
-        }
-        this.resizeView.boundaryBounds = { left: 0, top: 0, right: this.width, bottom: this.height }
-        this.cropView.boundaryBounds = { ...bounds }
+        this.cropView.setBounds(cropBounds)
+        this.cropView.isFixedCrop = this.isFixedCrop
         this.render()
       } else {
         this.imageView.setBounds(null)
         this.resizeView.setBounds(null)
         this.cropView.setBounds(null)
-        this.resizeView.boundaryBounds = null
-        this.cropView.boundaryBounds = null
         this.imageView.clearRect()
         this.resizeView.clearRect()
         this.cropView.clearRect()
@@ -172,7 +173,7 @@ export default {
       this.resizeView = new ResizeView(this.$refs.viewCanvas, { ...DEFAULT_RESIZE_HANDLER_STYLE, ...this.resizeHandlerStyle })
     }
     if (!this.cropView) {
-      this.cropView = new CropView(this.$refs.cropCanvas, { ...DEFAULT_CROP_HANDLER_STYLE, ...this.cropHandlerStyle })
+      this.cropView = new CropView(this.$refs.cropCanvas, { ...DEFAULT_CROP_HANDLER_STYLE, ...this.cropHandlerStyle }, { left: 0, top: 0, right: this.width, bottom: this.height })
     }
   },
   methods: {
@@ -183,14 +184,6 @@ export default {
       const { pageX, pageY } = event.touches && event.touches.length > 0 ? event.touches[0] : event
       const { offsetLeft, offsetTop } = this.$refs.container
       return { x: pageX - offsetLeft, y: pageY - offsetTop }
-    },
-    updateBounds () {
-      if (!this.isCrop) {
-        const bounds = { ...this.trackerView.bounds }
-        this.imageView.setBounds(bounds)
-        this.cropView.renderBounds = { ...bounds }
-        this.cropView.boundaryBounds = { ...bounds }
-      }
     },
     render () {
       if (!this.isDrawing) {
@@ -209,11 +202,11 @@ export default {
       if (mode == null) {
         this.editMode = EDIT_MODE.NONE
       } else {
-        window.addEventListener('mousemove', this.onDocumentMouseMove)
+        window.addEventListener('mousemove', this.onMouseMove)
         window.addEventListener('mouseup', this.onMouseUp)
         this.editMode = mode === HANDLER_POS.MOVE ? EDIT_MODE.MOVE : EDIT_MODE.RESIZE
+        this.prevPos = curPos
       }
-      this.prevPos = curPos
     },
     onMouseMove (event) {
       if (this.editMode !== EDIT_MODE.NONE) {
@@ -223,16 +216,15 @@ export default {
         } else if (this.editMode === EDIT_MODE.MOVE) {
           this.trackerView.changeMoveBounds(curPos, this.prevPos)
         }
-        this.updateBounds()
+        if (!this.isCrop) {
+          this.imageView.setBounds(this.resizeView.bounds)
+        }
         this.render()
         this.prevPos = curPos
       }
     },
     onMouseUp (event) {
       if (this.editMode !== EDIT_MODE.NONE) {
-        if (!this.isCrop && this.editMode === EDIT_MODE.RESIZE) {
-          this.resize()
-        }
         this.resizeView.mode = null
         this.cropView.mode = null
         this.editMode = EDIT_MODE.NONE
@@ -241,15 +233,9 @@ export default {
       window.removeEventListener('mousemove', this.onDocumentMouseMove)
       window.removeEventListener('mouseup', this.onMouseUp)
     },
-    onDocumentMouseMove (event) {
-      if (this.editMode === EDIT_MODE.RESIZE) {
-        this.trackerView.changeResizeBounds(this.getPos(event))
-        this.updateBounds()
-        this.render()
-      }
-    },
     onClickCrop () {
       this.isCrop = false
+      this.imageView.resize()
       this.crop()
     },
     saveImageFile (fileName) {
@@ -262,8 +248,8 @@ export default {
     crop () {
       const bounds = { ...this.cropView.bounds }
       this.imageView.crop(bounds)
-      this.resizeView.bounds = { ...bounds }
-      this.cropView.boundaryBounds = { ...bounds }
+      this.imageView.setBounds(bounds)
+      this.resizeView.setBounds(bounds)
       this.render()
       this.$emit('changeImage', this.getImage())
     },
