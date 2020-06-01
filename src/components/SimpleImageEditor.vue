@@ -6,9 +6,9 @@
       @mousedown.stop="onMouseDown"
       @mousemove.stop="onMouseMove"
       @mouseup.stop="onMouseUp"
-      @touchstart.prevent="onMouseDown"
-      @touchmove.prevent="onMouseMove"
-      @touchend.prevent="onMouseUp"
+      @touchstart="onMouseDown"
+      @touchmove="onMouseMove"
+      @touchend="onMouseUp"
       id="viewCanvas"
       ref="viewCanvas"
     ></canvas>
@@ -20,9 +20,9 @@
       @mousedown.stop="onMouseDown"
       @mousemove.stop="onMouseMove"
       @mouseup.stop="onMouseUp"
-      @touchstart.prevent="onMouseDown"
-      @touchmove.prevent="onMouseMove"
-      @touchend.prevent="onMouseUp"
+      @touchstart="onMouseDown"
+      @touchmove="onMouseMove"
+      @touchend="onMouseUp"
       id="cropCanvas"
       ref="cropCanvas"
       style="position:absolute;left:0;top:0;"
@@ -49,7 +49,7 @@ const DEFAULT_RESIZE_HANDLER_STYLE = {
 const DEFAULT_CROP_HANDLER_STYLE = {
   strokeColor: '#FF0000',
   strokeWidth: 2,
-  handlerFillColor: '#FF0000',
+  handlerFillColor: '#000000',
   handlerSize: 7,
   fillColor: '#C0C0C0',
   fillAlpha: 0.3,
@@ -215,6 +215,7 @@ export default {
             this.editMode = EDIT_MODE.RESIZE
         }
         this.prevPos = curPos
+        event.preventDefault()
       }
     },
     onMouseMove (event) {
@@ -232,6 +233,7 @@ export default {
         }
         this.render()
         this.prevPos = curPos
+        event.preventDefault()
       }
     },
     onMouseUp (event) {
@@ -240,6 +242,7 @@ export default {
         this.cropView.mode = null
         this.editMode = EDIT_MODE.NONE
         this.prevPos = null
+        event.preventDefault()
       }
       window.removeEventListener('mousemove', this.onDocumentMouseMove)
       window.removeEventListener('mouseup', this.onMouseUp)

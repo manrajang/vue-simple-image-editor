@@ -35,6 +35,26 @@ export default class CropView extends ResizeView {
       super.drawHandlerList()
     }
   }
+  drawLineList () {
+    const { left, top, right, bottom } = this.bounds
+    const width = right - left
+    const height = bottom - top
+    let x = left + width * 1 / 3
+    this.ctx.setLineDash([5, 5])
+    this.drawLine(x, top, x, bottom)
+    x = left + width * 2 / 3
+    this.drawLine(x, top, x, bottom)
+    let y = top + height * 1 / 3
+    this.drawLine(left, y, right, y)
+    y = top + height * 2 / 3
+    this.drawLine(left, y, right, y)
+  }
+  drawLine (mx, my, lx, ly) {
+    this.ctx.beginPath()
+    this.ctx.moveTo(mx, my)
+    this.ctx.lineTo(lx, ly)
+    this.ctx.stroke()
+  }
   setMode (mousePoint) {
     if (this.isFixedCrop) {
       const { x: posX, y: posY } = mousePoint

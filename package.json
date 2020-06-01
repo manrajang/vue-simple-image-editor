@@ -1,6 +1,6 @@
 {
   "name": "vue-simple-image-editor",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": false,
   "main": "dist/simpleImageEditor.common.js",
   "scripts": {
@@ -47,8 +47,10 @@
     "image simple editor",
     "crop",
     "resize",
+    "rotate",
     "image crop",
-    "image resize"
+    "image resize",
+    "image rotate"
   ],
   "repository": {
     "type": "git",
