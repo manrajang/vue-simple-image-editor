@@ -31,6 +31,7 @@ export default class ResizeView extends RenderView {
     this.strokeWidth = strokeWidth
     this.handlerFillColor = handlerFillColor
     this.handlerSize = handlerSize
+    this.touchSize = this.handlerSize + 5
     this.mode = null
   }
   draw () {
@@ -46,6 +47,7 @@ export default class ResizeView extends RenderView {
     this.ctx.translate(-centerX, -centerY)
     this.drawRect(left, top, right - left, bottom - top)
     this.drawHandlerList()
+    this.drawLineList()
     this.ctx.restore()
   }
   drawRect (x, y, width, height) {
@@ -84,6 +86,7 @@ export default class ResizeView extends RenderView {
     this.drawHandler(right, centerY)
     this.drawRotation()
   }
+  drawLineList () {}
   setMode (mousePoint) {
     const { left, top, right, bottom } = this.bounds
     const centerX = left + (right - left) / 2
@@ -115,8 +118,8 @@ export default class ResizeView extends RenderView {
       this.mode = null
     }
   }
-  changeResizeBounds (mousePoint) {
-    const { x, y } = convertPoint(mousePoint, this.bounds)
+  changeResizeBounds (curPos) {
+    const { x, y } = convertPoint(curPos, this.bounds)
     const { left, top, right, bottom } = this.bounds
     const newBounds = { ...this.bounds }
     if ((this.mode & HANDLER_POS.LEFT) === HANDLER_POS.LEFT) {

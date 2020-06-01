@@ -6,25 +6,25 @@
     <br/>
     <div>Resize &amp; Crop Mode</div>
     <button type="button" @click="onClickSaveImageFileInMutliMode">Save Image File (Multi)</button>
-    <simple-image-editor ref="multiCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="200" :cropHeight="200" @changeImage="onChangeImage"/>
+    <simple-image-editor ref="multiCanvas" style="border: 1px solid red;" :width="800" :height="600" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="200" :cropHeight="200" @changeImage="onChangeImage"/>
     <br/>
     <div>Resize &amp; Crop Mode (Fix)</div>
     <button type="button" @click="onClickSaveImageFileInMutliModeWithFixedCrop">Save Image File (Multi)</button>
-    <simple-image-editor ref="multiCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="200" :cropHeight="200" isFixedCrop @changeImage="onChangeImage"/>
+    <simple-image-editor ref="multiCanvasWithFixedCrop" style="border: 1px solid red;" :width="800" :height="600" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="200" :cropHeight="200" isFixedCrop @changeImage="onChangeImage"/>
     <br/>
     <div>Resize Mode</div>
     <button type="button" @click="onClickSaveImageFileInResizeMode">Save Image File (Resize)</button>
-    <simple-image-editor ref="resizeCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" isResizeMode @changeImage="onChangeImage"/>
+    <simple-image-editor ref="resizeCanvas" style="border: 1px solid red;" :width="800" :height="600" :imageSrc="imageSrc" :imageObj="imageObj" isResizeMode @changeImage="onChangeImage"/>
     <br/>
     <div>Crop Mode</div>
     <button type="button" @click="onClickSaveImageFileInCropMode">Save Image File (Crop)</button>
     <button type="button" @click="onClickSaveCrop">Save Crop</button>
-    <simple-image-editor ref="cropCanvas" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" isCropMode @changeImage="onChangeImage"/>
+    <simple-image-editor ref="cropCanvas" style="border: 1px solid red;" :width="800" :height="600" :imageSrc="imageSrc" :imageObj="imageObj" isCropMode @changeImage="onChangeImage"/>
     <br/>
     <div>Crop Mode (Fix)</div>
     <button type="button" @click="onClickSaveImageFileInCropModeWithFixedCrop">Save Image File (Crop)</button>
     <button type="button" @click="onClickSaveCropWithFixedCrop">Save Crop</button>
-    <simple-image-editor ref="cropCanvasWithFixedCrop" style="border: 1px solid red;" :width="1000" :height="1000" :imageSrc="imageSrc" :imageObj="imageObj" isCropMode :cropWidth="200" :cropHeight="200" isFixedCrop @changeImage="onChangeImage"/>
+    <simple-image-editor ref="cropCanvasWithFixedCrop" style="border: 1px solid red;" :width="800" :height="600" :imageSrc="imageSrc" :imageObj="imageObj" isCropMode :cropWidth="200" :cropHeight="200" isFixedCrop @changeImage="onChangeImage"/>
     <br/>
     <div>Origin Image</div>
     <div ref="container"></div>

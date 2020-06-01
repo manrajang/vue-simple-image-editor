@@ -77,7 +77,7 @@ components: {
 |-------------------------------|--------------------|-------------|------------------------------------------|
 | strokeColor                   | String             | #FF0000     | Resize Stroke Color                      |
 | strokeWidth                   | Number             | 2           | Resize Stroke Width                      |
-| handlerFillColor              | String             | #FF0000     | Resize Handler Fill Color                |
+| handlerFillColor              | String             | #000000     | Resize Handler Fill Color                |
 | handlerSize                   | Number             | 7           | Resize Handler Size                      |
 | fillColor                     | String             | #C0C0C0     | Crop Fill Color                          |
 | fillAlpha                     | Number             | 0.3         | Crop Fill Alpha                          |
