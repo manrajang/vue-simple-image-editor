@@ -1,32 +1,5 @@
 <template>
-  <div :style="{ width: `${width}px`, height: `${height}px` }" class="container" ref="container" style="position:relative;transform:">
-    <canvas
-      :height="height"
-      :width="width"
-      @mousedown.stop="onMouseDown"
-      @mousemove.stop="onMouseMove"
-      @mouseup.stop="onMouseUp"
-      @touchstart="onMouseDown"
-      @touchmove="onMouseMove"
-      @touchend="onMouseUp"
-      id="viewCanvas"
-      ref="viewCanvas"
-    ></canvas>
-    <canvas
-      v-show="isCrop"
-      class="crop-canvas"
-      :height="height"
-      :width="width"
-      @mousedown.stop="onMouseDown"
-      @mousemove.stop="onMouseMove"
-      @mouseup.stop="onMouseUp"
-      @touchstart="onMouseDown"
-      @touchmove="onMouseMove"
-      @touchend="onMouseUp"
-      id="cropCanvas"
-      ref="cropCanvas"
-      style="position:absolute;left:0;top:0;"
-    ></canvas>
+  <div>
     <template v-if="isMultiMode">
       <template v-if="isCrop" >
         <div style="position:absolute;right:0;top:0;">
@@ -40,39 +13,12 @@
 </template>
 
 <script>
-import ImageView from '@/view/ImageView'
-import ResizeView from '@/view/ResizeView'
-import CropView from '@/view/CropView'
-import { HANDLER_POS, EDIT_MODE } from '@/constants'
-
-const DEFAULT_RESIZE_HANDLER_STYLE = {
-  strokeColor: '#FF0000',
-  strokeWidth: 2,
-  handlerFillColor: '#FF0000',
-  handlerSize: 7,
-}
-const DEFAULT_CROP_HANDLER_STYLE = {
-  strokeColor: '#FF0000',
-  strokeWidth: 2,
-  handlerFillColor: '#000000',
-  handlerSize: 7,
-  fillColor: '#C0C0C0',
-  fillAlpha: 0.3,
-}
-
-function loadImage (src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve(img)
-    img.onerror = reject
-    img.src = src
-  })
-}
+import ImageEditor from '@/view/ImageEditor'
 
 export default {
   props: {
-    width: { type: Number, default: 500 },
-    height: { type: Number, default: 500 },
+    width: { type: Number, default: 500, required: true },
+    height: { type: Number, default: 500, required: true },
     imageSrc: { type: String, default: null },
     imageObj: { type: Image, default: null },
     isResizeMode: { type: Boolean, default: false },
@@ -92,190 +38,61 @@ export default {
   data () {
     return {
       isCrop: null,
-      imageView: null,
-      resizeView: null,
-      cropView: null,
-      image: null,
-      editMode: EDIT_MODE.NONE,
-      isDrawing: false,
-      prevPos: null,
+      imageEditor: null,
     }
   },
   computed: {
     isMultiMode () {
       return !(this.isResizeMode ^ this.isCropMode)
     },
-    trackerView () {
-      return this.isCrop ? this.cropView : this.resizeView
-    }
   },
   watch: {
-    imageSrc: {
-      immediate: true,
-      handler (value) {
-        if (value) {
-          this.setImage(value)
-        } else {
-          this.image = null
-        }
+    imageSrc (value) {
+      if (this.imageEditor) {
+        this.imageEditor.setImagePath(value)
       }
     },
-    imageObj: {
-      immediate: true,
-      handler (value) {
-        if (value) {
-          this.setImage(value.src)
-        } else {
-          this.image = null
-        }
+    imageObj (value) {
+      if (this.imageEditor) {
+        this.imageEditor.setImagePath(value ? value.src : null)
       }
     },
-    isCropMode: {
-      immediate: true,
-      handler (value) {
-        this.isCrop = value
-      }
+    isCropMode (value) {
+      this.isCrop = value
     },
     isFixedCrop (value) {
-      this.cropView.isFixedCrop = value
-      this.render()
+      this.imageEditor.setFixedCrop(value)
     },
     isCrop (value) {
-      this.render()
-      this.$emit('changeCropMode', value)
-    },
-    image (value) {
-      this.imageView.image = value
-      if (value) {
-        const { width, height } = value
-        const x = (this.width - width) / 2
-        const y = (this.height - height) / 2
-        const bounds = { left: x, top: y, right: x + width, bottom: y + height, angle: 0 }
-        let cropBounds = bounds
-        if (this.cropWidth && this.cropHeight && this.cropWidth < width && this.cropHeight < height) {
-          const x = (this.width - this.cropWidth) / 2
-          const y = (this.height - this.cropHeight) / 2
-          cropBounds = { left: x, top: y, right: x + this.cropWidth, bottom: y + this.cropHeight }
-        }
-        this.imageView.setBounds(bounds)
-        this.resizeView.setBounds(bounds)
-        this.cropView.setBounds(cropBounds)
-        this.cropView.isFixedCrop = this.isFixedCrop
-        this.render()
-      } else {
-        this.imageView.setBounds(null)
-        this.resizeView.setBounds(null)
-        this.cropView.setBounds(null)
-        this.imageView.clearRect()
-        this.resizeView.clearRect()
-        this.cropView.clearRect()
-      }
+      this.imageEditor.setCrop(value)
     },
   },
   mounted () {
-    if (!this.imageView) {
-      this.imageView = new ImageView(this.$refs.viewCanvas)
+    if (!this.imageEditor) {
+      this.imageEditor = new ImageEditor(this.$el, { width: this.width, height: this.height, cropWidth: this.cropWidth, cropHeight: this.cropHeight })
     }
-    if (!this.resizeView) {
-      this.resizeView = new ResizeView(this.$refs.viewCanvas, { ...DEFAULT_RESIZE_HANDLER_STYLE, ...this.resizeHandlerStyle })
-    }
-    if (!this.cropView) {
-      this.cropView = new CropView(this.$refs.cropCanvas, { ...DEFAULT_CROP_HANDLER_STYLE, ...this.cropHandlerStyle }, { left: 0, top: 0, right: this.width, bottom: this.height })
-    }
+    this.imageEditor.init()
+    this.imageEditor.setImagePath(this.imageSrc || (this.imageObj && this.imageObj.src))
+    this.imageEditor.setFixedCrop(this.isFixedCrop)
+    this.isCrop = this.isCropMode
   },
   methods: {
-    setImage (path) {
-      loadImage(path).then(image => this.image = image)
-    },
-    getPos (event) {
-      const { pageX, pageY } = event.touches && event.touches.length > 0 ? event.touches[0] : event
-      const { offsetLeft, offsetTop } = this.$refs.container
-      return { x: pageX - offsetLeft, y: pageY - offsetTop }
-    },
-    render () {
-      if (!this.isDrawing) {
-        window.requestAnimationFrame(() => {
-          this.imageView.draw()
-          this.trackerView.draw()
-          this.isDrawing = false
-        })
-        this.isDrawing = true
-      }
-    },
-    onMouseDown (event) {
-      const curPos = this.getPos(event)
-      this.trackerView.setMode(curPos)
-      const { mode } = this.trackerView
-      if (mode == null) {
-        this.editMode = EDIT_MODE.NONE
-      } else {
-        window.addEventListener('mousemove', this.onMouseMove)
-        window.addEventListener('mouseup', this.onMouseUp)
-        switch (mode) {
-          case HANDLER_POS.MOVE:
-            this.editMode = EDIT_MODE.MOVE
-            break
-          case HANDLER_POS.ROTATION:
-            this.editMode = EDIT_MODE.ROTATION
-            break
-          default:
-            this.editMode = EDIT_MODE.RESIZE
-        }
-        this.prevPos = curPos
-        event.preventDefault()
-      }
-    },
-    onMouseMove (event) {
-      if (this.editMode !== EDIT_MODE.NONE) {
-        const curPos = this.getPos(event)
-        if (this.editMode === EDIT_MODE.RESIZE) {
-          this.trackerView.changeResizeBounds(curPos)
-        } else if (this.editMode === EDIT_MODE.MOVE) {
-          this.trackerView.changeMoveBounds(curPos, this.prevPos)
-        } else if (this.editMode === EDIT_MODE.ROTATION) {
-          this.trackerView.changeAngle(curPos)
-        }
-        if (!this.isCrop) {
-          this.imageView.setBounds(this.resizeView.bounds)
-        }
-        this.render()
-        this.prevPos = curPos
-        event.preventDefault()
-      }
-    },
-    onMouseUp (event) {
-      if (this.editMode !== EDIT_MODE.NONE) {
-        this.resizeView.mode = null
-        this.cropView.mode = null
-        this.editMode = EDIT_MODE.NONE
-        this.prevPos = null
-        event.preventDefault()
-      }
-      window.removeEventListener('mousemove', this.onDocumentMouseMove)
-      window.removeEventListener('mouseup', this.onMouseUp)
-    },
-    onClickCrop () {
+    async onClickCrop () {
+      await this.imageEditor.resize()
+      await this.imageEditor.crop()
       this.isCrop = false
-      this.imageView.resize()
-      this.crop()
     },
     saveImageFile (fileName) {
-      this.imageView.saveFile(fileName)
+      this.imageEditor.saveImageFile(fileName)
     },
-    resize () {
-      this.imageView.resize()
-      this.$emit('changeImage', this.getImage())
+    async resize () {
+      await this.imageEditor.resize()
+      this.$emit('changeImage', this.imageEditor.getImage())
     },
-    crop () {
-      const bounds = { ...this.cropView.bounds }
-      this.imageView.crop(bounds)
-      this.imageView.setBounds(bounds)
-      this.resizeView.setBounds(bounds)
-      this.render()
-      this.$emit('changeImage', this.getImage())
-    },
-    getImage () {
-      return this.imageView.image
+    async crop () {
+      await this.imageEditor.crop()
+      this.imageEditor.render()
+      this.$emit('changeImage', this.imageEditor.getImage())
     },
   }
 }

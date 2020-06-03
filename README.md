@@ -46,8 +46,8 @@ components: {
 ### Props
 | Prop                          | Type               | Default                      | Description                              |
 |-------------------------------|--------------------|------------------------------|------------------------------------------|
-| width                         | Number             | 500                          | Image Width                              |
-| height                        | Number             | 500                          | Image Height                             |
+| width                         | Number             | 500                          | Image Width (required)                   |
+| height                        | Number             | 500                          | Image Height (required)                  |
 | imageSrc                      | String             | null                         | Image Path                               |
 | imageObj                      | Image              | null                         | Image Object                             |
 | isResizeMode                  | Boolean            | false                        | Only Resize Mode                         |

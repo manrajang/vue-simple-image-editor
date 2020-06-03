@@ -2,13 +2,15 @@ import ResizeView from './ResizeView'
 import { HANDLER_POS } from '@/constants'
 
 export default class CropView extends ResizeView {
-  constructor (canvas, style, boundaryBounds) {
-    super(canvas, style)
-    const { fillColor, fillAlpha } = style
-    this.fillColor = fillColor
-    this.fillAlpha = fillAlpha
+  constructor (canvas, boundaryBounds) {
+    super(canvas)
     this.boundaryBounds = boundaryBounds
     this.isFixedCrop = false
+  }
+  setStyle ({ strokeColor = '#FF0000', strokeWidth = 2, handlerFillColor = '#000000', handlerSize = 7, fillColor = '#C0C0C0', fillAlpha = 0.3 } = {}) {
+    this.fillColor = fillColor
+    this.fillAlpha = fillAlpha
+    super.setStyle({ strokeColor, strokeWidth, handlerFillColor, handlerSize })
   }
   draw () {
     if (!this.bounds) {

@@ -25,14 +25,17 @@ function convertPoint ({ x, y }, { left, top, right, bottom, angle }) {
 }
 
 export default class ResizeView extends RenderView {
-  constructor (canvas, { strokeColor, strokeWidth, handlerFillColor, handlerSize }) {
+  constructor (canvas) {
     super(canvas)
+    this.mode = null
+    this.setStyle()
+  }
+  setStyle ({ strokeColor = '#FF0000', strokeWidth = 2, handlerFillColor = '#FF0000', handlerSize = 7 } = {}) {
     this.strokeColor = strokeColor
     this.strokeWidth = strokeWidth
     this.handlerFillColor = handlerFillColor
     this.handlerSize = handlerSize
     this.touchSize = this.handlerSize + 5
-    this.mode = null
   }
   draw () {
     if (!this.bounds) {

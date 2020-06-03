@@ -26,13 +26,17 @@ export default class ImageView extends RenderView {
     this.ctx.restore()
   }
   crop ({ left: cropLeft, top: cropTop, right: cropRight, bottom: cropBottom }) {
-    const width = cropRight - cropLeft
-    const height = cropBottom - cropTop
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    canvas.getContext('2d').drawImage(this.canvas, cropLeft, cropTop, width, height, 0, 0, width, height)
-    this.image.src = canvas.toDataURL()
+    return new Promise((resolve, reject) => {
+      const width = cropRight - cropLeft
+      const height = cropBottom - cropTop
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d').drawImage(this.canvas, cropLeft, cropTop, width, height, 0, 0, width, height)
+      this.image.onload = () => resolve()
+      this.image.onerror = reject
+      this.image.src = canvas.toDataURL()
+    })
   }
   createResizeCanvas () {
     const { left, top, right, bottom, angle } = this.bounds
@@ -59,7 +63,11 @@ export default class ImageView extends RenderView {
     return canvas
   }
   resize () {
-    this.image.src = this.createResizeCanvas().toDataURL()
+    return new Promise((resolve, reject) => {
+      this.image.onload = () => resolve()
+      this.image.onerror = reject
+      this.image.src = this.createResizeCanvas().toDataURL()
+    })
   }
   saveFile (fileName = 'imageFile') {
     this.createResizeCanvas().toBlob(function (blob) {
