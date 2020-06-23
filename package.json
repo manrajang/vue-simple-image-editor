@@ -1,18 +1,21 @@
 {
   "name": "vue-simple-image-editor",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": false,
   "main": "dist/simpleImageEditor.common.js",
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service build --mode production",
     "lint": "vue-cli-service lint",
-    "bundle": "vue-cli-service build --target lib --name simpleImageEditor ./src/components/SimpleImageEditor.vue"
+    "bundle": "vue-cli-service build --mode bundle --target lib --name simpleImageEditor ./src/components/SimpleImageEditor.vue"
   },
   "dependencies": {
     "core-js": "^3.4.3",
     "transformation-matrix": "^2.3.0",
     "vue": "^2.6.10"
+  },
+  "peerDependencies": {
+    "transformation-matrix": ">=2.3.0 <=2.4.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.1.0",
