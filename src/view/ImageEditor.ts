@@ -3,16 +3,27 @@ import ResizeView from '@/view/ResizeView'
 import CropView from '@/view/CropView'
 import { HANDLER_POS, EDIT_MODE } from '@/constants'
 
-function createCanvas (width, height, style = null) {
+interface Option {
+  width: number;
+  height: number;
+  cropWidth: number;
+  cropHeight: number;
+}
+
+interface MouseEventFunc {
+  (event: Event): void;
+}
+
+function createCanvas (width: number, height: number, style?: string): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
-  canvas.setAttribute('style', style)
+  canvas.setAttribute('style', style || '')
   return canvas
 }
 
-function loadImage (src) {
-  return new Promise((resolve, reject) => {
+function loadImage (src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image()
     image.onload = () => resolve(image)
     image.onerror = reject
@@ -21,7 +32,34 @@ function loadImage (src) {
 }
 
 export default class ImageEditor {
-  constructor (el, { width = 500, height = 500, cropWidth = 0, cropHeight = 0 }) {
+  private width: number
+  private height: number
+  private cropWidth: number
+  private cropHeight: number
+  private viewCanvas: HTMLCanvasElement
+  private cropCanvas: HTMLCanvasElement
+  private fragment: DocumentFragment
+  private imageView: ImageView
+  private resizeView: ResizeView
+  private cropView: CropView
+  private editMode = EDIT_MODE.NONE
+  private prevPos: Point | null = null
+  private isCrop = false
+
+  private readonly windowEventList = [
+    { key: 'mousemove', event: (event: Event) => this.onMove(event, this.getMousePos(event)) },
+    { key: 'mouseup', event: (event: Event) => this.onUp(event) },
+    { key: 'touchmove', event: (event: Event) => this.onMove(event, this.getTouchPos(event)) },
+    { key: 'touchend', event: (event: Event) => this.onUp(event) },
+  ]
+
+  private readonly eventList = [
+    ...this.windowEventList,
+    { key: 'mousedown', event: (event: Event) => this.onDown(event, this.getMousePos(event)) },
+    { key: 'touchstart', event: (event: Event) => this.onDown(event, this.getTouchPos(event)) },
+  ]
+
+  constructor (public el: HTMLElement, { width = 500, height = 500, cropWidth = 0, cropHeight = 0 }: Option) {
     this.el = el
     this.width = width
     this.height = height
@@ -35,35 +73,24 @@ export default class ImageEditor {
     this.fragment.appendChild(this.cropCanvas)
     this.imageView = new ImageView(this.viewCanvas)
     this.resizeView = new ResizeView(this.viewCanvas)
-    this.cropView = new CropView(this.cropCanvas, { left: 0, top: 0, right: width, bottom: height })
-    this.onMouseDown = this._onMouseDown.bind(this)
-    this.onMouseMove = this._onMouseMove.bind(this)
-    this.onMouseUp = this._onMouseUp.bind(this)
-    this.eventList = [
-      { key: 'mousedown', event: this.onMouseDown },
-      { key: 'mousemove', event: this.onMouseMove },
-      { key: 'mouseup', event: this.onMouseUp },
-      { key: 'touchstart', event: this.onMouseDown },
-      { key: 'touchmove', event: this.onMouseMove },
-      { key: 'touchend', event: this.onMouseUp },
-    ]
-    this.editMode = EDIT_MODE.NONE
-    this.prevPos = null
-    this.isCrop = false
+    this.cropView = new CropView(this.cropCanvas, { left: 0, top: 0, right: width, bottom: height, angle: 0 })
     this.addEventListener()
   }
+
   addEventListener () {
     this.eventList.forEach(({ key, event }) => {
-      this.viewCanvas.addEventListener(key, event)
-      this.cropCanvas.addEventListener(key, event)
+      this.viewCanvas.addEventListener(key, event as MouseEventFunc)
+      this.cropCanvas.addEventListener(key, event as MouseEventFunc)
     })
   }
+
   removeEventListener () {
     this.eventList.forEach(({ key, event }) => {
-      this.viewCanvas.removeEventListener(key, event)
-      this.cropCanvas.removeEventListener(key, event)
+      this.viewCanvas.removeEventListener(key, event as MouseEventFunc)
+      this.cropCanvas.removeEventListener(key, event as MouseEventFunc)
     })
   }
+
   init () {
     if (!this.el.contains(this.viewCanvas)) {
       if (this.el.hasChildNodes()) {
@@ -73,18 +100,21 @@ export default class ImageEditor {
       }
     }
   }
-  setImage (image) {
+
+  setImage (image: HTMLImageElement) {
     this.imageView.image = image
     if (image) {
       const { width, height } = image
       const x = (this.width - width) / 2
       const y = (this.height - height) / 2
       const bounds = { left: x, top: y, right: x + width, bottom: y + height, angle: 0 }
-      let cropBounds = bounds
+      let cropBounds: Bounds
       if (this.cropWidth && this.cropHeight && this.cropWidth < width && this.cropHeight < height) {
         const x = (this.width - this.cropWidth) / 2
         const y = (this.height - this.cropHeight) / 2
-        cropBounds = { left: x, top: y, right: x + this.cropWidth, bottom: y + this.cropHeight }
+        cropBounds = { left: x, top: y, right: x + this.cropWidth, bottom: y + this.cropHeight, angle: 0 }
+      } else {
+        cropBounds = bounds
       }
       this.imageView.setBounds(bounds)
       this.resizeView.setBounds(bounds)
@@ -99,54 +129,81 @@ export default class ImageEditor {
       this.cropView.clearRect()
     }
   }
-  setImagePath (path) {
+
+  setImagePath (path: string) {
     loadImage(path).then(image => this.setImage(image))
   }
-  setCrop (isCrop) {
+
+  setCrop (isCrop: boolean) {
     this.isCrop = isCrop
     this.cropCanvas.style.visibility = isCrop ? 'visible' : 'hidden'
     this.render()
   }
-  setFixedCrop (isFixedCrop) {
+
+  setFixedCrop (isFixedCrop: boolean) {
     this.cropView.isFixedCrop = isFixedCrop
   }
-  getPos (event) {
-    const { pageX, pageY } = event.touches && event.touches.length > 0 ? event.touches[0] : event
+
+  getTouchPos (event: Event): Point {
+    let pageX
+    let pageY
+    const { touches } = event as TouchEvent
+    if (touches && touches.length) {
+      pageX = touches[0].pageX
+      pageY = touches[0].pageY
+    } else {
+      pageX = 0
+      pageY = 0
+    }
     const { offsetLeft, offsetTop } = this.el
     return { x: pageX - offsetLeft, y: pageY - offsetTop }
   }
-  getTrackerView () {
+
+  getMousePos (event: Event): Point {
+    const { pageX, pageY } = event as MouseEvent
+    const { offsetLeft, offsetTop } = this.el
+    return { x: pageX - offsetLeft, y: pageY - offsetTop }
+  }
+
+  getTrackerView (): ResizeView {
     return this.isCrop ? this.cropView : this.resizeView
   }
-  getImage () {
+
+  getImage (): HTMLImageElement | null {
     return this.imageView.image
   }
+
   resize () {
     this.imageView.resize()
   }
-  saveImageFile (fileName) {
+
+  saveImageFile (fileName: string) {
     this.imageView.saveFile(fileName)
   }
+
   crop () {
-    const bounds = { ...this.cropView.bounds }
+    const { bounds } = this.cropView
+    if (!bounds) {
+      return
+    }
     this.imageView.crop(bounds)
     this.imageView.setBounds(bounds)
     this.resizeView.setBounds(bounds)
   }
+
   render () {
     this.imageView.draw()
     this.getTrackerView().draw()
   }
-  _onMouseDown (event) {
-    const curPos = this.getPos(event)
+
+  onDown (event: Event, curPos: Point) {
     const trackerView = this.getTrackerView()
     trackerView.setMode(curPos)
     const { mode } = trackerView
     if (mode == null) {
       this.editMode = EDIT_MODE.NONE
     } else {
-      window.addEventListener('mousemove', this.onMouseMove)
-      window.addEventListener('mouseup', this.onMouseUp)
+      this.windowEventList.forEach(({ key, event }) => window.addEventListener(key, event as MouseEventFunc))
       if (mode === HANDLER_POS.MOVE) {
         this.editMode = EDIT_MODE.MOVE
       } else if (mode === HANDLER_POS.ROTATION) {
@@ -158,14 +215,16 @@ export default class ImageEditor {
       event.preventDefault()
     }
   }
-  _onMouseMove (event) {
+
+  onMove (event: Event, curPos: Point) {
     if (this.editMode !== EDIT_MODE.NONE) {
-      const curPos = this.getPos(event)
       const trackerView = this.getTrackerView()
       if (this.editMode === EDIT_MODE.RESIZE) {
         trackerView.changeResizeBounds(curPos)
       } else if (this.editMode === EDIT_MODE.MOVE) {
-        trackerView.changeMoveBounds(curPos, this.prevPos)
+        if (this.prevPos) {
+          trackerView.changeMoveBounds(curPos, this.prevPos)
+        }
       } else if (this.editMode === EDIT_MODE.ROTATION) {
         trackerView.changeAngle(curPos)
       }
@@ -177,7 +236,8 @@ export default class ImageEditor {
       event.preventDefault()
     }
   }
-  _onMouseUp (event) {
+
+  onUp (event: Event) {
     if (this.editMode !== EDIT_MODE.NONE) {
       this.resizeView.mode = null
       this.cropView.mode = null
@@ -185,7 +245,11 @@ export default class ImageEditor {
       this.prevPos = null
       event.preventDefault()
     }
-    window.removeEventListener('mousemove', this.onDocumentMouseMove)
-    window.removeEventListener('mouseup', this.onMouseUp)
+    this.windowEventList.forEach(({ key, event }) => window.removeEventListener(key, event as MouseEventFunc))
+  }
+
+  setStyle (resizeHandlerStyle: Style, cropHandlerStyle: Style) {
+    this.resizeView.setStyle(resizeHandlerStyle)
+    this.cropView.setStyle(cropHandlerStyle)
   }
 }

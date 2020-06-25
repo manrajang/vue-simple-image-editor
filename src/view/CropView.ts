@@ -1,17 +1,25 @@
 import ResizeView from './ResizeView'
 import { HANDLER_POS } from '@/constants'
 
+const DEFAULT_COLOR = '#C0C0C0'
+const DEFAULT_FILL_ALPHA = 0.3
+
 export default class CropView extends ResizeView {
-  constructor (canvas, boundaryBounds) {
+  public isFixedCrop = false
+  private fillColor = DEFAULT_COLOR
+  private fillAlpha = DEFAULT_FILL_ALPHA
+
+  constructor (canvas: HTMLCanvasElement, public boundaryBounds: Bounds) {
     super(canvas)
-    this.boundaryBounds = boundaryBounds
-    this.isFixedCrop = false
   }
-  setStyle ({ strokeColor = '#FF0000', strokeWidth = 2, handlerFillColor = '#000000', handlerSize = 7, fillColor = '#C0C0C0', fillAlpha = 0.3 } = {}) {
+
+  setStyle (style: Style) {
+    const { fillColor = DEFAULT_COLOR, fillAlpha = DEFAULT_FILL_ALPHA, ...rest } = style
     this.fillColor = fillColor
     this.fillAlpha = fillAlpha
-    super.setStyle({ strokeColor, strokeWidth, handlerFillColor, handlerSize })
+    super.setStyle(rest)
   }
+
   draw () {
     if (!this.bounds) {
       return
@@ -19,25 +27,40 @@ export default class CropView extends ResizeView {
     this.clearRect()
     super.draw()
   }
-  setBounds (bounds) {
-    this.bounds = bounds ? { ...bounds, angle: 0 } : null
-  }
-  drawRect (x, y, width, height) {
-    this.ctx.strokeStyle = this.lineStrokeStyle
-    this.ctx.lineWidth = this.lineWidth
-    this.ctx.strokeRect(x, y, width, height)
+  // setBounds (bounds: IBounds) {
+  //   this.bounds = bounds ? { ...bounds, angle: 0 } : null
+  // }
+
+  drawRect (bounds: Bounds) {
+    if (!this.ctx) {
+      return
+    }
+    const { left, top, right, bottom } = bounds
+    const width = right - left
+    const height = bottom - top
+    this.ctx.strokeStyle = this.strokeColor
+    this.ctx.lineWidth = this.strokeWidth
+    this.ctx.strokeRect(left, top, width, height)
     this.ctx.globalAlpha = this.fillAlpha
     this.ctx.fillStyle = this.fillColor
-    this.ctx.fillRect(x, y, width, height)
+    this.ctx.fillRect(left, top, width, height)
     this.ctx.globalAlpha = 1
   }
-  drawRotation () {}
+
+  drawSub () {
+    this.drawLineList()
+  }
+
   drawHandlerList () {
     if (!this.isFixedCrop) {
       super.drawHandlerList()
     }
   }
+
   drawLineList () {
+    if (!this.bounds || !this.ctx) {
+      return
+    }
     const { left, top, right, bottom } = this.bounds
     const width = right - left
     const height = bottom - top
@@ -51,13 +74,21 @@ export default class CropView extends ResizeView {
     y = top + height * 2 / 3
     this.drawLine(left, y, right, y)
   }
-  drawLine (mx, my, lx, ly) {
+
+  drawLine (mx: number, my: number, lx: number, ly: number) {
+    if (!this.ctx) {
+      return
+    }
     this.ctx.beginPath()
     this.ctx.moveTo(mx, my)
     this.ctx.lineTo(lx, ly)
     this.ctx.stroke()
   }
-  setMode (mousePoint) {
+
+  setMode (mousePoint: Point) {
+    if (!this.bounds) {
+      return
+    }
     if (this.isFixedCrop) {
       const { x: posX, y: posY } = mousePoint
       const { left, top, right, bottom } = this.bounds
@@ -73,7 +104,11 @@ export default class CropView extends ResizeView {
       this.mode = null
     }
   }
-  changeResizeBounds (mousePoint) {
+
+  changeResizeBounds (mousePoint: Point) {
+    if (!this.bounds || !this.mode) {
+      return
+    }
     super.changeResizeBounds(mousePoint)
     const { x, y } = mousePoint
     const { left: boundaryLeft, top: boundaryTop, right: boundaryRight, bottom: boundaryBottom } = this.boundaryBounds
@@ -100,7 +135,11 @@ export default class CropView extends ResizeView {
     }
     this.setBounds(newBounds)
   }
-  changeMoveBounds ({ x: curPosX, y: curPosY }, { x: prevPosX, y: prevPosY }) {
+
+  changeMoveBounds ({ x: curPosX, y: curPosY }: Point, { x: prevPosX, y: prevPosY }: Point) {
+    if (!this.bounds) {
+      return
+    }
     const { left, top, right, bottom } = this.bounds
     const { left: boundaryLeft, top: boundaryTop, right: boundaryRight, bottom: boundaryBottom } = this.boundaryBounds
     const width = right - left
@@ -119,6 +158,6 @@ export default class CropView extends ResizeView {
     if (newBoundsY + height > boundaryBottom) {
       newBoundsY = boundaryBottom - height
     }
-    this.setBounds({ left: newBoundsX, top: newBoundsY, right: newBoundsX + width, bottom: newBoundsY + height })
+    this.setBounds({ left: newBoundsX, top: newBoundsY, right: newBoundsX + width, bottom: newBoundsY + height, angle: 0 })
   }
 }

@@ -1,17 +1,20 @@
 import RenderView from './RenderView'
 import { rotate, compose, applyToPoint } from 'transformation-matrix'
 
-function convertPoint ({ x, y }, { left, top, right, bottom, angle }) {
+function convertPoint ({ x, y }: Point, { left, top, right, bottom, angle }: Bounds) {
   return applyToPoint(compose(rotate(angle * Math.PI / 180, (right - left) / 2, (bottom - top) / 2)), { x, y })
 }
 
 export default class ImageView extends RenderView {
-  constructor (canvas) {
+  public image: HTMLImageElement | null
+
+  constructor (canvas: HTMLCanvasElement) {
     super(canvas)
     this.image = null
   }
+
   draw () {
-    if (!this.image) {
+    if (!this.image || !this.bounds || !this.ctx) {
       return
     }
     const { left, top, right, bottom, angle } = this.bounds
@@ -25,20 +28,39 @@ export default class ImageView extends RenderView {
     this.ctx.drawImage(this.image, left, top, right - left, bottom - top)
     this.ctx.restore()
   }
-  crop ({ left: cropLeft, top: cropTop, right: cropRight, bottom: cropBottom }) {
+
+  crop ({ left: cropLeft, top: cropTop, right: cropRight, bottom: cropBottom }: Bounds) {
     return new Promise((resolve, reject) => {
+      if (!this.image) {
+        reject(new Error('No Image'))
+        return
+      }
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        reject(new Error('No Canvas Context'))
+        return
+      }
       const width = cropRight - cropLeft
       const height = cropBottom - cropTop
-      const canvas = document.createElement('canvas')
       canvas.width = width
       canvas.height = height
-      canvas.getContext('2d').drawImage(this.canvas, cropLeft, cropTop, width, height, 0, 0, width, height)
+      ctx.drawImage(this.canvas, cropLeft, cropTop, width, height, 0, 0, width, height)
       this.image.onload = () => resolve()
       this.image.onerror = reject
       this.image.src = canvas.toDataURL()
     })
   }
-  createResizeCanvas () {
+
+  createResizeCanvas (): HTMLCanvasElement | null {
+    if (!this.bounds || !this.image) {
+      return null
+    }
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      return null
+    }
     const { left, top, right, bottom, angle } = this.bounds
     const width = right - left
     const height = bottom - top
@@ -52,8 +74,6 @@ export default class ImageView extends RenderView {
     const t = Math.min(lt.y, lb.y, rt.y, rb.y)
     const r = Math.max(lt.x, lb.x, rt.x, rb.x)
     const b = Math.max(lt.y, lb.y, rt.y, rb.y)
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
     canvas.width = r - l
     canvas.height = b - t
     ctx.translate(Math.abs(l) + centerX, Math.abs(t) + centerY)
@@ -62,15 +82,30 @@ export default class ImageView extends RenderView {
     ctx.drawImage(this.image, 0, 0, width, height)
     return canvas
   }
+
   resize () {
     return new Promise((resolve, reject) => {
+      if (!this.image) {
+        reject(new Error('No Image'))
+        return
+      }
+      const canvas = this.createResizeCanvas()
+      if (!canvas) {
+        reject(new Error('No Canvas'))
+        return
+      }
       this.image.onload = () => resolve()
       this.image.onerror = reject
-      this.image.src = this.createResizeCanvas().toDataURL()
+      this.image.src = canvas.toDataURL()
     })
   }
+
   saveFile (fileName = 'imageFile') {
-    this.createResizeCanvas().toBlob(function (blob) {
+    const canvas = this.createResizeCanvas()
+    if (!canvas) {
+      return
+    }
+    canvas.toBlob(function (blob) {
       const downloadLink = document.createElement('a')
       downloadLink.href = URL.createObjectURL(blob)
       downloadLink.download = `${fileName}.jpeg`

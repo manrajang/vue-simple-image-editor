@@ -74,6 +74,7 @@ export default {
     this.imageEditor.init()
     this.imageEditor.setImagePath(this.imageSrc || (this.imageObj && this.imageObj.src))
     this.imageEditor.setFixedCrop(this.isFixedCrop)
+    this.imageEditor.setStyle(this.resizeHandlerStyle, this.cropHandlerStyle)
     this.isCrop = this.isCropMode
   },
   methods: {

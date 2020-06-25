@@ -7,7 +7,7 @@
     <div>Resize &amp; Crop Mode</div>
     <button type="button" @click="onClickSaveImageFileInMutliMode">Save Image File (Multi)</button>
     <div>
-      <simple-image-editor ref="multiCanvas" style="border: 1px solid red;" :width="800" :height="600" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="200" :cropHeight="200" @changeImage="onChangeImage"/>
+      <simple-image-editor ref="multiCanvas" style="border: 1px solid red;" :width="800" :height="600" :imageSrc="imageSrc" :imageObj="imageObj" :cropWidth="200" :cropHeight="200" :resizeHandlerStyle="{ strokeColor: '#000000' }" @changeImage="onChangeImage"/>
     </div>
     <br/>
     <div>Resize &amp; Crop Mode (Fix)</div>
@@ -68,7 +68,7 @@ export default {
         const reader = new FileReader()
         reader.onload = e => {
           const image = new Image()
-          image.onload = e => {
+          image.onload = () => {
             this.imageObj = image
             while (this.$refs.container.hasChildNodes()) {
               this.$refs.container.removeChild(this.$refs.container.firstChild)
