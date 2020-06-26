@@ -1,8 +1,12 @@
 import RenderView from './RenderView'
-import { rotate, compose, applyToPoint } from 'transformation-matrix'
+import { rotate, applyToPoint } from '@/matrixUtil'
 
 function convertPoint ({ x, y }: Point, { left, top, right, bottom, angle }: Bounds) {
-  return applyToPoint(compose(rotate(angle * Math.PI / 180, (right - left) / 2, (bottom - top) / 2)), { x, y })
+  return applyToPoint(rotate(angle * Math.PI / 180, (right - left) / 2, (bottom - top) / 2), { x, y })
+}
+
+interface MSHTMLCanvasElement extends HTMLCanvasElement {
+  msToBlob?: (type: string) => Blob;
 }
 
 export default class ImageView extends RenderView {
@@ -105,13 +109,26 @@ export default class ImageView extends RenderView {
     if (!canvas) {
       return
     }
-    canvas.toBlob(function (blob) {
-      const downloadLink = document.createElement('a')
-      downloadLink.href = URL.createObjectURL(blob)
-      downloadLink.download = `${fileName}.jpeg`
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-      document.body.removeChild(downloadLink)
-    }, 'image/jpeg')
+    if (canvas.toBlob) {
+      canvas.toBlob(function (blob) {
+        if (blob) {
+          const downloadLink = document.createElement('a')
+          const url = URL.createObjectURL(blob)
+          downloadLink.download = `${fileName}.jpeg`
+          downloadLink.setAttribute('style', 'display:none;')
+          downloadLink.setAttribute('download', `${fileName}.jpeg`)
+          downloadLink.setAttribute('href', url)
+          document.body.appendChild(downloadLink)
+          downloadLink.click()
+          document.body.removeChild(downloadLink)
+          URL.revokeObjectURL(url)
+        }
+      }, 'image/jpeg')
+    } else {
+      const newCanvas = canvas as MSHTMLCanvasElement
+      if (newCanvas.msToBlob) {
+        window.navigator.msSaveBlob(newCanvas.msToBlob('image/jpeg'), 'canvas.png')
+      }
+    }
   }
 }

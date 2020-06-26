@@ -1,6 +1,6 @@
 import RenderView from './RenderView'
 import { HANDLER_POS } from '@/constants'
-import { rotate, compose, applyToPoint } from 'transformation-matrix'
+import { rotate, transform, applyToPoint } from '@/matrixUtil'
 
 function dist (p1: Point, p2: Point) {
   return Math.sqrt((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y))
@@ -11,17 +11,17 @@ function point (x: number, y: number): Point {
 }
 
 function convertBounds ({ left: newLeft, top: newTop, right: newRight, bottom: newBottom }: Bounds, { left, top, right, bottom, angle }: Bounds) {
-  const matrix = compose(
+  const matrix = transform([
     rotate(angle * Math.PI / 180, left + (right - left) / 2, top + (bottom - top) / 2),
     rotate(-angle * Math.PI / 180, newLeft + (newRight - newLeft) / 2, newTop + (newBottom - newTop) / 2)
-  )
+  ])
   const { x: l, y: t } = applyToPoint(matrix, { x: newLeft, y: newTop })
   const { x: r, y: b } = applyToPoint(matrix, { x: newRight, y: newBottom })
   return { left: l, top: t, right: r, bottom: b, angle }
 }
 
 function convertPoint ({ x, y }: Point, { left, top, right, bottom, angle }: Bounds) {
-  return applyToPoint(compose(rotate(-angle * Math.PI / 180, left + (right - left) / 2, top + (bottom - top) / 2)), { x, y })
+  return applyToPoint(rotate(-angle * Math.PI / 180, left + (right - left) / 2, top + (bottom - top) / 2), { x, y })
 }
 
 const DEFAULT_COLOR = '#FF0000'

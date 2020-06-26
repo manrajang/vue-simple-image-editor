@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
-    "transformation-matrix": "^2.4.0",
     "vue": "^2.6.11",
     "vue-simple-image-editor": "file:.."
   },
