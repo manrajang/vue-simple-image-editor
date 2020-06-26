@@ -174,7 +174,7 @@ export default class ImageEditor {
   }
 
   resize () {
-    this.imageView.resize()
+    return new Promise((resolve, reject) => this.imageView.resize().then(() => resolve()).catch(() => reject(new Error('Fail Resize'))))
   }
 
   saveImageFile (fileName: string) {
@@ -186,9 +186,13 @@ export default class ImageEditor {
     if (!bounds) {
       return
     }
-    this.imageView.crop(bounds)
-    this.imageView.setBounds(bounds)
-    this.resizeView.setBounds(bounds)
+    return new Promise((resolve, reject) => {
+      this.imageView.crop(bounds).then(() => {
+        this.imageView.setBounds(bounds)
+        this.resizeView.setBounds(bounds)
+        resolve()
+      }).catch(() => reject(new Error('Fail Crop')))
+    })
   }
 
   render () {
