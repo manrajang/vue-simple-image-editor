@@ -60,7 +60,6 @@ export default class ImageEditor {
   ]
 
   constructor (public el: HTMLElement, { width = 500, height = 500, cropWidth = 0, cropHeight = 0 }: Option) {
-    this.el = el
     this.width = width
     this.height = height
     this.cropWidth = cropWidth
