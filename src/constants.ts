@@ -8,12 +8,12 @@ export enum HANDLER_POS {
   TOP_RIGHT = 10,
   BOTTOM_RIGHT = 12,
   ROTATION = 98,
-  MOVE = 99,
+  MOVE = 99
 }
 
 export enum EDIT_MODE {
   NONE,
   RESIZE,
   MOVE,
-  ROTATION,
+  ROTATION
 }
